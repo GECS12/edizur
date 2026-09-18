@@ -18,35 +18,40 @@ const IMAGE_FIELDS = `alt, hotspot, "url": asset->url, "lqip": asset->metadata.l
 const PAGE = document.body?.dataset?.page || 'home';
 
 const SETTINGS_QUERY = `"settings": *[_id == "siteSettings"][0]{
-  heroTitle, heroSubtitle, region, email, phone, sellText, buyText, footerTagline,
-  address, instagram, facebook,
+  heroTitle, heroTitleEn, heroSubtitle, heroSubtitleEn, region, regionEn,
+  email, phone, sellText, sellTextEn, buyText, buyTextEn,
+  footerTagline, footerTaglineEn, address, instagram, facebook,
   "heroImage": heroImage{${IMAGE_FIELDS}}
 }`;
 
 const AGENTS_QUERY = `"agents": *[_type == "agent" && !(_id in path("drafts.**"))] | order(coalesce(sortOrder, 99) asc, name asc){
-  _id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}
+  _id, name, role, roleEn, phone, email, "photo": photo{${IMAGE_FIELDS}}
 }`;
 
 const PROPERTIES_QUERY = `"properties": *[_type == "property" && !(_id in path("drafts.**"))]
   | order(coalesce(featured, false) desc, coalesce(publishedAt, _createdAt) desc){
-    _id, title, listingType, status, price, priceOnRequest, location, typology,
+    _id, title, titleEn, listingType, status, price, priceOnRequest,
+    location, locationEn, typology,
     area, areaUtil, areaBruta, areaTerreno, areaGaragem,
     bedrooms, suites, bathrooms, parkingSpaces, floor, yearBuilt, condoFee,
-    energyRating, description, features, reference, featured,
+    energyRating, description, descriptionEn, features, reference, featured,
     mapLocation,
     "images": images[]{_key, ${IMAGE_FIELDS}},
-    "agent": agent->{_id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}}
+    "agent": agent->{_id, name, role, roleEn, phone, email, "photo": photo{${IMAGE_FIELDS}}}
 }`;
 
 const PROJECTS_QUERY = `"projects": *[_type == "project" && !(_id in path("drafts.**"))]
   | order(coalesce(sortOrder, 99) asc, coalesce(publishedAt, _createdAt) desc){
-    _id, title, subtitle, location, summary, description, sortOrder,
+    _id, title, titleEn, subtitle, subtitleEn, location, locationEn,
+    summary, summaryEn, description, descriptionEn, sortOrder,
     "images": images[]{_key, ${IMAGE_FIELDS}}
 }`;
 
 const QUERY = PAGE === 'projects'
   ? `{${SETTINGS_QUERY}, ${PROJECTS_QUERY}}`
-  : `{${SETTINGS_QUERY}, ${AGENTS_QUERY}, ${PROPERTIES_QUERY}}`;
+  : PAGE === 'contact'
+    ? `{${SETTINGS_QUERY}}`
+    : `{${SETTINGS_QUERY}, ${AGENTS_QUERY}, ${PROPERTIES_QUERY}}`;
 
 const STATUS_WEIGHT = { disponivel: 0, reservado: 1, vendido: 2 };
 
@@ -70,6 +75,8 @@ const state = {
   agents: [],
   settings: null,
   filter: 'all',
+  typology: 'all',
+  price: 'all',
   view: 'grid',
   gallery: null,
   modalKind: null,
@@ -77,6 +84,17 @@ const state = {
   mapMarkers: null,
   leafletPromise: null,
 };
+
+function loc(doc, field) {
+  if (!doc) return '';
+  const lang = window.EdizurUI?.lang || 'pt';
+  if (lang === 'en') {
+    const english = doc[`${field}En`];
+    if (typeof english === 'string' && english.trim()) return english.trim();
+  }
+  const value = doc[field];
+  return typeof value === 'string' ? value.trim() : (value ?? '');
+}
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -100,19 +118,20 @@ function contactPhone() {
 
 /* ---------- data ---------- */
 
-function imageUrl(image, { width, height } = {}) {
+function imageUrl(image, { width, height, q } = {}) {
   if (!image?.url) return null;
   const params = new URLSearchParams();
   if (width) params.set('w', String(width));
   if (height) params.set('h', String(height));
   if (width || height) params.set('fit', 'crop');
-  if (image.hotspot) {
+  if (typeof image.hotspot?.x === 'number' && typeof image.hotspot?.y === 'number') {
     params.set('crop', 'focalpoint');
     params.set('fp-x', image.hotspot.x.toFixed(3));
     params.set('fp-y', image.hotspot.y.toFixed(3));
   }
   params.set('auto', 'format');
-  params.set('q', '78');
+  params.set('fm', 'webp');
+  params.set('q', String(q ?? (width && width <= 800 ? 52 : 60)));
   return `${image.url}?${params}`;
 }
 
@@ -176,7 +195,7 @@ function specs(property) {
   return [
     property.typology && { icon: 'bed', value: property.typology },
     util && { icon: 'area', value: formatArea(util) },
-    property.areaBruta && { icon: 'area', value: `${formatArea(property.areaBruta)} bruta` },
+    property.areaBruta && { icon: 'area', value: `${formatArea(property.areaBruta)} ${t('areaBrutaShort')}` },
     property.bathrooms && { icon: 'bath', value: `${property.bathrooms} WC` },
     property.energyRating && { icon: 'bolt', value: `Energia ${property.energyRating}` },
   ].filter(Boolean);
@@ -222,30 +241,21 @@ function setOgImage(url) {
   meta.setAttribute('content', url);
 }
 
-function renderWhatsAppFloat() {
-  const phone = digits(contactPhone());
-  const button = $('#wa-float');
-  if (!phone || !button) return;
-
-  const message = 'Olá, gostaria de falar com a Edizur.';
-  button.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  button.hidden = false;
-}
-
 /* ---------- rendering ---------- */
 
 function applySettings(settings) {
   if (!settings) return;
 
   for (const node of $$('[data-content]')) {
-    const value = settings[node.dataset.content];
-    if (typeof value === 'string' && value.trim()) {
-      node.textContent = value.trim();
+    const value = loc(settings, node.dataset.content);
+    if (value) {
+      node.textContent = value;
       node.dataset.contentLocked = '1';
+    } else {
+      delete node.dataset.contentLocked;
     }
   }
 
-  // When viewing English, prefer translated fallbacks for unlocked CMS fields.
   if (window.EdizurUI?.lang === 'en') {
     $$('[data-i18n-fallback]').forEach((node) => {
       if (node.dataset.contentLocked === '1') return;
@@ -255,14 +265,19 @@ function applySettings(settings) {
   }
 
   const email = settings.email || CONFIG.fallbackEmail;
-  $('#footer-email').href = `mailto:${email}`;
-  $('#footer-email-text').textContent = email;
+  const emailLink = $('#footer-email');
+  if (emailLink) {
+    emailLink.href = `mailto:${email}`;
+    const emailText = $('#footer-email-text');
+    if (emailText) emailText.textContent = email;
+  }
 
   const phone = settings.phone || CONFIG.fallbackPhone;
   const phoneLink = $('#footer-phone');
   if (phone && phoneLink) {
     phoneLink.href = `tel:${digits(phone)}`;
-    $('#footer-phone-text').textContent = phone;
+    const phoneText = $('#footer-phone-text');
+    if (phoneText) phoneText.textContent = phone;
     phoneLink.hidden = false;
   }
 
@@ -272,20 +287,20 @@ function applySettings(settings) {
     .filter(Boolean);
 
   const footerAddress = $('#footer-address');
-  footerAddress.textContent = addressLines.join('\n');
-  footerAddress.hidden = !addressLines.length;
+  if (footerAddress) {
+    footerAddress.textContent = addressLines.join('\n');
+    footerAddress.hidden = !addressLines.length;
+  }
 
   renderSocial(settings);
-  renderWhatsAppFloat();
 
-  const projectCover = null;
-  const heroSource = settings.heroImage || projectCover;
-  const heroUrl = imageUrl(heroSource, { width: 2000, height: 1400 });
+  const heroSource = settings.heroImage;
+  const heroUrl = imageUrl(heroSource, { width: 1600, height: 1100, q: 68 });
   const hero = $('#hero-image');
   if (heroUrl && hero) {
     hero.src = heroUrl;
     hero.alt = heroSource?.alt || 'Edizur';
-    setOgImage(imageUrl(heroSource, { width: 1200, height: 630 }));
+    setOgImage(imageUrl(heroSource, { width: 1200, height: 630, q: 72 }));
   }
 }
 
@@ -296,6 +311,7 @@ function renderSocial(settings) {
   ].filter((network) => network.url);
 
   const container = $('#footer-social');
+  if (!container) return;
   container.hidden = !networks.length;
   container.innerHTML = networks
     .map(
@@ -308,15 +324,18 @@ function renderSocial(settings) {
 
 function propertyCard(property) {
   const images = property.images || [];
-  const coverUrl = imageUrl(images[0], { width: 760, height: 570 });
+  const title = loc(property, 'title');
+  const location = loc(property, 'location') || loc(state.settings, 'region') || 'Porto e região';
+  const description = loc(property, 'description');
+  const coverUrl = imageUrl(images[0], { width: 640, height: 480 });
   const status = statusLabel(property.status);
   const count = images.length;
   const specList = specs(property);
   const lqip = images[0]?.lqip;
   const slides = images
     .map((image, index) => {
-      const url = imageUrl(image, { width: 760, height: 570 });
-      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || property.title)}"
+      const url = imageUrl(image, { width: 640, height: 480 });
+      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || title)}"
         data-card-slide="${index}" ${index ? 'hidden loading="lazy"' : 'loading="lazy"'}
         decoding="async"
         style="${index || !lqip ? '' : `background:url('${escapeHtml(lqip)}') center/cover`}">`;
@@ -339,15 +358,15 @@ function propertyCard(property) {
           : ''}
       </div>
       <button class="card-body" type="button" data-open-property
-        aria-label="${escapeHtml(t('seeDetails'))}: ${escapeHtml(property.title)}">
+        aria-label="${escapeHtml(t('seeDetails'))}: ${escapeHtml(title)}">
         <p class="card-meta">
-          ${icon('pin')}<span>${escapeHtml(property.location || 'Porto e região')}</span>
+          ${icon('pin')}<span>${escapeHtml(location)}</span>
         </p>
-        <h3>${escapeHtml(property.title)}</h3>
+        <h3>${escapeHtml(title)}</h3>
         ${specList.length
           ? `<p class="specs">${specList.map((s) => `<span>${icon(s.icon)}${escapeHtml(s.value)}</span>`).join('')}</p>`
           : ''}
-        ${property.description ? `<p class="card-excerpt">${escapeHtml(property.description)}</p>` : ''}
+        ${description ? `<p class="card-excerpt">${escapeHtml(description)}</p>` : ''}
         <span class="card-foot">
           <span class="card-agent">${escapeHtml(property.agent?.name || t('teamDefault'))}</span>
           <span class="card-cta">${escapeHtml(t('seeDetails'))} ${icon('arrow')}</span>
@@ -421,7 +440,7 @@ async function renderMap(properties) {
       fillOpacity: 1,
     });
     marker.bindTooltip(
-      `<strong class="map-tooltip-title">${escapeHtml(property.title)}</strong>` +
+      `<strong class="map-tooltip-title">${escapeHtml(loc(property, 'title'))}</strong>` +
       `<span class="map-tooltip-price">${escapeHtml(priceLabel(property))}</span>`,
       { className: 'edizur-map-tooltip', direction: 'top', offset: [0, -7] },
     );
@@ -440,29 +459,35 @@ function renderProperties() {
   const grid = $('#grid');
   const empty = $('#empty');
   const mapView = $('#map-view');
+  if (!grid) return;
 
   const visible = state.properties
     .filter((p) => state.filter === 'all' || p.listingType === state.filter)
+    .filter((p) => state.typology === 'all' || p.typology === state.typology)
+    .filter((p) => matchesPrice(p, state.price))
     .sort((a, b) => (STATUS_WEIGHT[a.status] ?? 0) - (STATUS_WEIGHT[b.status] ?? 0));
 
   grid.removeAttribute('aria-busy');
   grid.hidden = state.view !== 'grid';
-  mapView.hidden = state.view !== 'map';
+  if (mapView) mapView.hidden = state.view !== 'map';
 
   if (state.view === 'map') {
-    empty.hidden = true;
+    if (empty) empty.hidden = true;
     renderMap(visible);
     return;
   }
 
   grid.innerHTML = visible.map(propertyCard).join('');
-  empty.textContent = t('emptyListings');
-  empty.hidden = visible.length > 0;
+  if (empty) {
+    empty.textContent = t('emptyListings');
+    empty.hidden = visible.length > 0;
+  }
   observeReveals(grid);
 }
 
 function renderTeam() {
   const container = $('#team');
+  if (!container) return;
 
   if (!state.agents.length) {
     container.closest('section').hidden = true;
@@ -488,7 +513,7 @@ function renderTeam() {
               : `<span class="member-initials" aria-hidden="true">${escapeHtml(initials)}</span>`}
           </div>
           <h3>${escapeHtml(agent.name)}</h3>
-          <p class="role">${escapeHtml(agent.role || t('roleDefault'))}</p>
+          <p class="role">${escapeHtml(loc(agent, 'role') || t('roleDefault'))}</p>
           <div class="member-links">
             ${agent.phone ? `<a class="chip" href="tel:${escapeHtml(agent.phone.replace(/\s/g, ''))}">${icon('phone')}${escapeHtml(agent.phone)}</a>` : ''}
             ${agent.email ? `<a class="chip" href="mailto:${escapeHtml(agent.email)}">${icon('mail')}${escapeHtml(agent.email)}</a>` : ''}
@@ -502,26 +527,30 @@ function renderTeam() {
 
 function projectCard(project) {
   const images = project.images || [];
-  const coverUrl = imageUrl(images[0], { width: 1400, height: 900 });
+  const title = loc(project, 'title');
+  const location = loc(project, 'location') || loc(state.settings, 'region') || 'Porto e região';
+  const subtitle = loc(project, 'subtitle');
+  const summary = loc(project, 'summary');
+  const coverUrl = imageUrl(images[0], { width: 1100, height: 700 });
   const lqip = images[0]?.lqip;
 
   return `
-    <article class="project-row" data-project-id="${escapeHtml(project._id)}">
+    <article class="project-row reveal" data-project-id="${escapeHtml(project._id)}">
       <div class="project-row-media${coverUrl ? '' : ' is-empty'}">
         ${coverUrl
-          ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(images[0]?.alt || project.title)}"
+          ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(images[0]?.alt || title)}"
               loading="lazy" decoding="async"
               style="${lqip ? `background:url('${escapeHtml(lqip)}') center/cover` : ''}">`
           : ''}
       </div>
       <button class="project-row-body" type="button" data-open-project
-        aria-label="${escapeHtml(t('seeProject'))}: ${escapeHtml(project.title)}">
+        aria-label="${escapeHtml(t('seeProject'))}: ${escapeHtml(title)}">
         <p class="card-meta">
-          ${icon('pin')}<span>${escapeHtml(project.location || 'Porto e região')}</span>
+          ${icon('pin')}<span>${escapeHtml(location)}</span>
         </p>
-        <h3>${escapeHtml(project.title)}</h3>
-        ${project.subtitle ? `<p class="card-subtitle">${escapeHtml(project.subtitle)}</p>` : ''}
-        ${project.summary ? `<p class="card-excerpt">${escapeHtml(project.summary)}</p>` : ''}
+        <h3>${escapeHtml(title)}</h3>
+        ${subtitle ? `<p class="card-subtitle">${escapeHtml(subtitle)}</p>` : ''}
+        ${summary ? `<p class="card-excerpt">${escapeHtml(summary)}</p>` : ''}
         <span class="card-foot">
           <span class="card-cta">${escapeHtml(t('seeProject'))} ${icon('arrow')}</span>
         </span>
@@ -536,10 +565,12 @@ function renderProjects() {
 
   grid.removeAttribute('aria-busy');
   grid.innerHTML = state.projects.map(projectCard).join('');
-  empty.textContent = t('emptyProjects');
-  empty.hidden = state.projects.length > 0;
-  grid.closest('section').hidden = false;
-  observeReveals(grid);
+  if (empty) {
+    empty.textContent = t('emptyProjects');
+    empty.hidden = state.projects.length > 0;
+  }
+  grid.closest('section')?.removeAttribute('hidden');
+  $$('.project-row', grid).forEach((node) => node.classList.add('is-in'));
 }
 
 /* ---------- detail modal ---------- */
@@ -550,8 +581,8 @@ function galleryMarkup(item) {
 
   const slides = images
     .map((image, index) => {
-      const url = imageUrl(image, { width: 1200, height: 800 });
-      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || item.title)}"
+      const url = imageUrl(image, { width: 1000, height: 680 });
+      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || loc(item, 'title'))}"
         data-slide="${index}" ${index ? 'hidden' : ''} ${index ? 'loading="lazy"' : ''}>`;
     })
     .join('');
@@ -569,14 +600,17 @@ function galleryMarkup(item) {
 
 function detailMarkup(property) {
   const agent = property.agent;
+  const title = loc(property, 'title');
+  const description = loc(property, 'description');
+  const place = loc(property, 'location');
   const email = agent?.email || state.settings?.email || CONFIG.fallbackEmail;
   const phone = digits(agent?.phone || contactPhone());
-  const propertyUrl = new URL(location.href);
+  const propertyUrl = new URL(window.location.href);
   propertyUrl.search = '';
   propertyUrl.hash = `imovel-${property._id}`;
 
-  const message = `Olá, tenho interesse em "${property.title}".\n\n${propertyUrl.href}`;
-  const subject = `Interesse: ${property.title}`;
+  const message = `Olá, tenho interesse em "${title}".\n\n${propertyUrl.href}`;
+  const subject = `Interesse: ${title}`;
   const whatsappUrl = phone
     ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
     : '';
@@ -590,7 +624,7 @@ function detailMarkup(property) {
   const util = usefulArea(property);
   const rows = [
     property.reference && [t('reference'), property.reference],
-    property.location && [t('location'), property.location],
+    property.location && [t('location'), place],
     property.typology && [t('typology'), property.typology],
     util && [t('areaUtil'), formatArea(util)],
     typeof property.areaBruta === 'number' && [t('areaBruta'), formatArea(property.areaBruta)],
@@ -611,7 +645,7 @@ function detailMarkup(property) {
     ${galleryMarkup(property)}
     <div class="modal-content">
       <p class="eyebrow"><span class="dot"></span>${typeLabel(property)}${property.featured ? ` · ${t('featured')}` : ''}</p>
-      <h2 id="modal-title">${escapeHtml(property.title)}</h2>
+      <h2 id="modal-title">${escapeHtml(title)}</h2>
       <p class="modal-price">
         ${property.listingType === 'procura' && !property.priceOnRequest ? t('budgetUpTo') : ''}${escapeHtml(priceLabel(property))}
       </p>
@@ -622,7 +656,7 @@ function detailMarkup(property) {
             .join('')}</dl>`
         : ''}
 
-      ${property.description ? `<p class="modal-desc">${escapeHtml(property.description)}</p>` : ''}
+      ${description ? `<p class="modal-desc">${escapeHtml(description)}</p>` : ''}
 
       ${property.features?.length
         ? `<ul class="feature-list">${property.features
@@ -636,7 +670,7 @@ function detailMarkup(property) {
           : ''}
         <span class="who">
           <strong>${escapeHtml(agent?.name || t('teamDefault'))}</strong>
-          <span>${escapeHtml(agent?.role || t('roleDefault'))}</span>
+          <span>${escapeHtml(loc(agent, 'role') || t('roleDefault'))}</span>
         </span>
         <span class="modal-actions">
           ${whatsappUrl
@@ -649,14 +683,18 @@ function detailMarkup(property) {
 }
 
 function projectDetailMarkup(project) {
+  const title = loc(project, 'title');
+  const subtitle = loc(project, 'subtitle');
+  const place = loc(project, 'location');
+  const description = loc(project, 'description');
   const email = state.settings?.email || CONFIG.fallbackEmail;
   const phone = digits(contactPhone());
-  const projectUrl = new URL(location.href);
+  const projectUrl = new URL(window.location.href);
   projectUrl.search = '';
   projectUrl.hash = `projeto-${project._id}`;
 
-  const message = `Olá, gostaria de saber mais sobre o projeto "${project.title}".\n\n${projectUrl.href}`;
-  const subject = `Projeto: ${project.title}`;
+  const message = `Olá, gostaria de saber mais sobre o projeto "${title}".\n\n${projectUrl.href}`;
+  const subject = `Projeto: ${title}`;
   const whatsappUrl = phone
     ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
     : '';
@@ -670,12 +708,12 @@ function projectDetailMarkup(project) {
     ${galleryMarkup(project)}
     <div class="modal-content">
       <p class="eyebrow"><span class="dot"></span>${escapeHtml(t('project'))}</p>
-      <h2 id="modal-title">${escapeHtml(project.title)}</h2>
-      ${project.subtitle ? `<p class="modal-subtitle">${escapeHtml(project.subtitle)}</p>` : ''}
-      ${project.location
-        ? `<dl class="spec-grid"><div class="spec"><dt>${escapeHtml(t('location'))}</dt><dd>${escapeHtml(project.location)}</dd></div></dl>`
+      <h2 id="modal-title">${escapeHtml(title)}</h2>
+      ${subtitle ? `<p class="modal-subtitle">${escapeHtml(subtitle)}</p>` : ''}
+      ${place
+        ? `<dl class="spec-grid"><div class="spec"><dt>${escapeHtml(t('location'))}</dt><dd>${escapeHtml(place)}</dd></div></dl>`
         : ''}
-      ${project.description ? `<p class="modal-desc">${escapeHtml(project.description)}</p>` : ''}
+      ${description ? `<p class="modal-desc">${escapeHtml(description)}</p>` : ''}
       <div class="modal-agent">
         <span class="who">
           <strong>Edizur</strong>
@@ -764,18 +802,126 @@ function closeModal() {
 
 /* ---------- events ---------- */
 
+function matchesPrice(property, bucket) {
+  if (bucket === 'all') return true;
+  if (typeof property.price !== 'number' || property.priceOnRequest) return false;
+  if (bucket === '0-250000') return property.price < 250000;
+  if (bucket === '250000-500000') return property.price >= 250000 && property.price < 500000;
+  if (bucket === '500000-1000000') return property.price >= 500000 && property.price < 1000000;
+  if (bucket === '1000000') return property.price >= 1000000;
+  return true;
+}
+
+function fillListingFilters() {
+  const typologySelect = $('#filter-typology');
+  if (typologySelect) {
+    const types = [...new Set(state.properties.map((item) => item.typology).filter(Boolean))].sort();
+    const current = types.includes(state.typology) ? state.typology : 'all';
+    typologySelect.innerHTML =
+      `<option value="all">${escapeHtml(t('filterAllTypes'))}</option>` +
+      types.map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join('');
+    typologySelect.value = current;
+    state.typology = current;
+  }
+
+  const priceSelect = $('#filter-price');
+  if (priceSelect) {
+    const options = [
+      ['all', t('filterAllPrices')],
+      ['0-250000', t('priceTo250')],
+      ['250000-500000', t('price250to500')],
+      ['500000-1000000', t('price500to1m')],
+      ['1000000', t('priceFrom1m')],
+    ];
+    priceSelect.innerHTML = options
+      .map(([value, label]) => `<option value="${value}">${escapeHtml(label)}</option>`)
+      .join('');
+    priceSelect.value = state.price;
+  }
+}
+
+function bindContactForm() {
+  const form = $('#contact-form');
+  if (!form) return;
+
+  const note = $('#form-note');
+  const button = form.querySelector('[type="submit"]');
+  const inbox = CONFIG.fallbackEmail;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (form.querySelector('[name="bot-field"]')?.value) return;
+
+    if (!form.reportValidity()) return;
+
+    const first = form.nome.value.trim();
+    const last = form.sobrenome.value.trim();
+    const email = form.email.value.trim();
+    const message = form.mensagem.value.trim();
+    const payload = {
+      name: `${first} ${last}`.trim(),
+      email,
+      message,
+      _subject: 'Contacto via edizur.pt',
+      _template: 'table',
+      _captcha: 'false',
+    };
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = t('formSending');
+    }
+    if (note) {
+      note.hidden = true;
+      note.textContent = '';
+    }
+
+    try {
+      const response = await fetch(`https://formsubmit.co/ajax/${inbox}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      form.reset();
+      if (note) {
+        note.textContent = t('formThanks');
+        note.hidden = false;
+      }
+    } catch {
+      const subject = encodeURIComponent('Contacto via edizur.pt');
+      const body = encodeURIComponent(`${payload.name}\n${payload.email}\n\n${payload.message}`);
+      window.open(
+        `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inbox)}&su=${subject}&body=${body}`,
+        '_blank',
+        'noopener',
+      );
+      if (note) {
+        note.textContent = t('formError');
+        note.hidden = false;
+      }
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = t('formSend');
+      }
+    }
+  });
+}
+
 function bindEvents() {
-  $('#nav-toggle').addEventListener('click', (event) => {
+  $('#nav-toggle')?.addEventListener('click', (event) => {
     const nav = $('#nav');
+    if (!nav) return;
     const open = nav.classList.toggle('is-open');
     event.currentTarget.setAttribute('aria-expanded', String(open));
   });
 
-  $('#nav').addEventListener('click', (event) => {
+  $('#nav')?.addEventListener('click', (event) => {
     if (event.target.tagName === 'A') $('#nav').classList.remove('is-open');
   });
 
-  $('#filters').addEventListener('click', (event) => {
+  $('#filters')?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-filter]');
     if (!button) return;
 
@@ -788,7 +934,17 @@ function bindEvents() {
     renderProperties();
   });
 
-  $('#view-switch').addEventListener('click', (event) => {
+  $('#filter-typology')?.addEventListener('change', (event) => {
+    state.typology = event.target.value || 'all';
+    renderProperties();
+  });
+
+  $('#filter-price')?.addEventListener('change', (event) => {
+    state.price = event.target.value || 'all';
+    renderProperties();
+  });
+
+  $('#view-switch')?.addEventListener('click', (event) => {
     const button = event.target.closest('button[data-view]');
     if (!button || button.dataset.view === state.view) return;
 
@@ -801,7 +957,7 @@ function bindEvents() {
     renderProperties();
   });
 
-  $('#grid').addEventListener('click', (event) => {
+  $('#grid')?.addEventListener('click', (event) => {
     const step = event.target.closest('[data-card-step]');
     if (step) {
       stepCardGallery(step.closest('.card'), Number(step.dataset.cardStep));
@@ -819,7 +975,7 @@ function bindEvents() {
     if (card) openProject(card.dataset.projectId);
   });
 
-  $('#modal').addEventListener('click', (event) => {
+  $('#modal')?.addEventListener('click', (event) => {
     if (event.target.closest('[data-close]')) return closeModal();
 
     const step = event.target.closest('[data-step]');
@@ -830,16 +986,19 @@ function bindEvents() {
   });
 
   document.addEventListener('keydown', (event) => {
-    if ($('#modal').hidden) return;
+    if ($('#modal')?.hidden !== false) return;
     if (event.key === 'Escape') closeModal();
     if (event.key === 'ArrowLeft') showSlide(state.gallery - 1);
     if (event.key === 'ArrowRight') showSlide(state.gallery + 1);
   });
 
+  bindContactForm();
+
   window.addEventListener('edizur:lang', () => {
     applySettings(state.settings);
     if (PAGE === 'projects') renderProjects();
-    else {
+    else if (PAGE === 'home') {
+      fillListingFilters();
       renderTeam();
       renderProperties();
     }
@@ -849,7 +1008,6 @@ function bindEvents() {
 /* ---------- boot ---------- */
 
 async function init() {
-  // Old deep links on the homepage should open the projects page.
   if (PAGE === 'home' && /^#projeto-/.test(location.hash)) {
     location.replace(`projetos.html${location.hash}`);
     return;
@@ -874,6 +1032,8 @@ async function init() {
 
     applySettings(state.settings);
 
+    if (PAGE === 'contact') return;
+
     if (PAGE === 'projects') {
       renderProjects();
       const projectMatch = location.hash.match(/^#projeto-(.+)$/);
@@ -881,6 +1041,7 @@ async function init() {
       return;
     }
 
+    fillListingFilters();
     renderTeam();
     renderProperties();
 
@@ -888,6 +1049,7 @@ async function init() {
     if (propertyMatch) openProperty(propertyMatch[1], { updateHash: false });
   } catch (error) {
     console.error('[edizur] falha ao carregar conteúdo', error);
+    if (PAGE === 'contact') return;
     if (PAGE === 'projects') {
       const grid = $('#projects-grid');
       const empty = $('#projects-empty');
@@ -902,11 +1064,16 @@ async function init() {
       return;
     }
 
-    $('#grid').innerHTML = '';
-    $('#grid').removeAttribute('aria-busy');
+    const grid = $('#grid');
+    if (grid) {
+      grid.innerHTML = '';
+      grid.removeAttribute('aria-busy');
+    }
     const empty = $('#empty');
-    empty.textContent = t('loadFail');
-    empty.hidden = false;
+    if (empty) {
+      empty.textContent = t('loadFail');
+      empty.hidden = false;
+    }
   }
 }
 

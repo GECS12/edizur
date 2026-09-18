@@ -8,10 +8,11 @@
 <link rel="canonical" href="https://edizur.pt/contactos.html">
 <meta name="theme-color" content="#EDEBE6">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260918-14">
+<link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/source-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
+<link rel="stylesheet" href="fonts.css?v=20260918-15">
+<link rel="stylesheet" href="styles.css?v=20260918-16">
 <script>
   (() => {
     const theme = localStorage.getItem('edizur-theme');
@@ -22,55 +23,10 @@
   })();
 </script>
 </head>
-<body class="page-contact">
-
-<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
-  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
-  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="1.5"/><path d="m3.8 6.6 8.2 6 8.2-6"/></symbol>
-  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.6 3h2.9l1.5 4-2 1.4a12 12 0 0 0 6.6 6.6l1.4-2 4 1.5v2.9A2.6 2.6 0 0 1 18.4 20 15.4 15.4 0 0 1 4 5.6 2.6 2.6 0 0 1 6.6 3Z"/></symbol>
-  <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.8"/><circle cx="12" cy="12" r="3.9"/><circle cx="17.1" cy="6.9" r=".6"/></symbol>
-  <symbol id="i-facebook" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.8"/><path d="M15.2 8.1h-1.3c-1 0-1.6.6-1.6 1.6v10.8M10.2 12.4h4.3"/></symbol>
-  <symbol id="i-message" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8.5 8 8.8 8.8 0 0 1-3.7-.9L4 20l1.3-3.7A8 8 0 1 1 20 11.5Z"/></symbol>
-</svg>
-
-<header class="site-header" id="header">
-  <div class="wrap header-inner">
-    <a class="brand" href="index.html#inicio" aria-label="Edizur — página inicial">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 100 100"><path d="M18 82V44l16 10 16-22 16 22 16-10v38Z"/><path d="M26 39V26h10v13M45 26V14h10v12M64 39V26h10v13"/></svg>
-      </span>
-      <span class="brand-text">
-        <strong>edizur</strong>
-        <small data-i18n="brandTagline">Construção e Imobiliária</small>
-      </span>
-    </a>
-
-    <nav class="nav" id="nav" aria-label="Navegação principal">
-      <a href="index.html#inicio" data-i18n="navHome">Início</a>
-      <a href="projetos.html" data-i18n="navProjects">Projetos</a>
-      <a href="index.html#imoveis" data-i18n="navListings">Imóveis</a>
-      <a href="index.html#servicos" data-i18n="navServices">Serviços</a>
-      <a href="index.html#equipa" data-i18n="navTeam">Equipa</a>
-      <a href="contactos.html" class="is-current" data-i18n="navContact" aria-current="page">Contactos</a>
-    </nav>
-
-    <div class="header-tools">
-      <div class="lang-switch" role="group" aria-label="Language">
-        <button type="button" class="is-active" data-lang="pt" aria-pressed="true">PT</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
-      </div>
-      <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" data-i18n-aria="themeToggle" aria-label="Ativar tema escuro">
-        <span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb"></span></span>
-      </button>
-      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav" data-i18n-aria="openMenu" aria-label="Abrir menu">
-        <svg class="ico"><use href="#i-menu"></use></svg>
-      </button>
-    </div>
-  </div>
-</header>
+<body class="page-contact" data-page="contact">
 
 <main>
-  <section class="contact-page">
+  <section class="contact-page" id="contacto">
     <div class="wrap contact-grid">
       <div class="contact-copy">
         <h1 data-i18n="contactTitle">Entre em contacto</h1>
@@ -78,8 +34,7 @@
           Venha conhecer melhor a Edizur e explorar oportunidades de aquisição de terrenos e imóveis para construção. Estamos disponíveis para apresentar soluções que agregam valor e confiança.
         </p>
 
-        <form class="contact-form" name="contacto" method="POST" action="/contactos.html?sucesso=1" data-netlify="true" netlify-honeypot="bot-field">
-          <input type="hidden" name="form-name" value="contacto">
+        <form class="contact-form" id="contact-form" novalidate>
           <p class="honeypot" hidden>
             <label>Não preencher: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
           </p>
@@ -110,56 +65,18 @@
           </div>
         </form>
 
-        <p class="form-note" id="form-note" hidden data-i18n="formThanks">Obrigado. A sua mensagem foi enviada.</p>
+        <p class="form-note" id="form-note" hidden></p>
       </div>
 
       <figure class="contact-visual">
-        <img src="assets/contact.jpg" alt="Pormenor de entrada e intercomunicador" width="900" height="1200" loading="eager" decoding="async">
+        <img src="assets/contact.jpg?v=20260918-15" alt="Intercomunicador à entrada de um imóvel" width="292" height="396" loading="eager" decoding="async">
       </figure>
     </div>
   </section>
 </main>
 
-<footer class="site-footer" id="rodape">
-  <div class="wrap footer-top">
-    <div class="footer-brand">
-      <strong>edizur</strong>
-      <small data-i18n="brandTagline">Construção e Imobiliária</small>
-    </div>
-    <div class="footer-office">
-      <a class="footer-email" href="mailto:edizur.imobiliaria@gmail.com">
-        <svg class="ico"><use href="#i-mail"></use></svg>
-        <span>edizur.imobiliaria@gmail.com</span>
-      </a>
-      <a class="footer-phone" href="tel:+351965466225">
-        <svg class="ico"><use href="#i-phone"></use></svg>
-        <span>+351 965 466 225</span>
-      </a>
-    </div>
-  </div>
-  <div class="wrap footer-bottom">
-    <p>&copy; <span id="year"></span> Edizur — <span data-i18n="rights">Todos os direitos reservados</span>.</p>
-  </div>
-</footer>
-
-<a class="wa-float" id="wa-float" href="https://wa.me/351965466225" target="_blank" rel="noopener"
-   aria-label="Contactar por WhatsApp">
-  <svg class="ico"><use href="#i-message"></use></svg>
-  <span>WhatsApp</span>
-</a>
-
-<script src="i18n.js?v=20260918-14"></script>
-<script>
-  document.getElementById('year').textContent = String(new Date().getFullYear());
-  document.getElementById('nav-toggle')?.addEventListener('click', (event) => {
-    const nav = document.getElementById('nav');
-    const open = nav.classList.toggle('is-open');
-    event.currentTarget.setAttribute('aria-expanded', String(open));
-  });
-  if (new URLSearchParams(location.search).get('sucesso') === '1') {
-    const note = document.getElementById('form-note');
-    if (note) note.hidden = false;
-  }
-</script>
+<script src="chrome.js?v=20260918-16"></script>
+<script src="i18n.js?v=20260918-16"></script>
+<script src="app.js?v=20260918-16"></script>
 </body>
 </html>

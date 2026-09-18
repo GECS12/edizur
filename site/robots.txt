@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+Disallow: /gestao
+
+Sitemap: https://edizur.pt/sitemap.xml
