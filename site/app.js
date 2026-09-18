@@ -23,8 +23,14 @@ const QUERY = `{
     | order(coalesce(featured, false) desc, coalesce(publishedAt, _createdAt) desc){
       _id, title, listingType, status, price, priceOnRequest, location, typology,
       area, bedrooms, bathrooms, energyRating, description, features, reference, featured,
+      mapLocation,
       "images": images[]{_key, ${IMAGE_FIELDS}},
       "agent": agent->{_id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}}
+  },
+  "projects": *[_type == "project" && !(_id in path("drafts.**"))]
+    | order(coalesce(sortOrder, 99) asc, coalesce(publishedAt, _createdAt) desc){
+      _id, title, subtitle, location, summary, description, sortOrder,
+      "images": images[]{_key, ${IMAGE_FIELDS}}
   }
 }`;
 
@@ -37,7 +43,18 @@ const euro = new Intl.NumberFormat('pt-PT', {
   maximumFractionDigits: 0,
 });
 
-const state = { properties: [], agents: [], settings: null, filter: 'all', gallery: null };
+const state = {
+  properties: [],
+  projects: [],
+  agents: [],
+  settings: null,
+  filter: 'all',
+  view: 'grid',
+  gallery: null,
+  modalKind: null,
+  map: null,
+  mapMarkers: null,
+};
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -207,15 +224,84 @@ function stepCardGallery(card, step) {
   $('[data-card-count]', card).textContent = `${next + 1} / ${slides.length}`;
 }
 
+function ensureMap() {
+  if (state.map) return true;
+  if (!window.L) return false;
+
+  state.map = L.map('property-map', { scrollWheelZoom: false }).setView([41.1579, -8.6291], 12);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(state.map);
+  state.mapMarkers = L.layerGroup().addTo(state.map);
+  return true;
+}
+
+function renderMap(properties) {
+  const empty = $('#map-empty');
+  const positioned = properties.filter(
+    (property) =>
+      Number.isFinite(property.mapLocation?.lat) &&
+      Number.isFinite(property.mapLocation?.lng),
+  );
+
+  if (!ensureMap()) {
+    empty.textContent = 'Não foi possível carregar o mapa. Por favor tente novamente mais tarde.';
+    empty.hidden = false;
+    return;
+  }
+
+  state.mapMarkers.clearLayers();
+  empty.textContent = 'Não existem imóveis com posição no mapa nesta categoria.';
+  empty.hidden = positioned.length > 0;
+
+  const bounds = [];
+  for (const property of positioned) {
+    const coordinates = [property.mapLocation.lat, property.mapLocation.lng];
+    bounds.push(coordinates);
+
+    const marker = L.circleMarker(coordinates, {
+      radius: 9,
+      color: '#fff',
+      weight: 2,
+      fillColor: '#b89765',
+      fillOpacity: 1,
+    });
+    marker.bindTooltip(
+      `<strong class="map-tooltip-title">${escapeHtml(property.title)}</strong>` +
+      `<span class="map-tooltip-price">${escapeHtml(priceLabel(property))}</span>`,
+      { className: 'edizur-map-tooltip', direction: 'top', offset: [0, -7] },
+    );
+    marker.on('click', () => openProperty(property._id));
+    marker.addTo(state.mapMarkers);
+  }
+
+  requestAnimationFrame(() => {
+    state.map.invalidateSize({ pan: false });
+    if (bounds.length === 1) state.map.setView(bounds[0], 14);
+    if (bounds.length > 1) state.map.fitBounds(bounds, { padding: [45, 45], maxZoom: 14 });
+  });
+}
+
 function renderProperties() {
   const grid = $('#grid');
   const empty = $('#empty');
+  const mapView = $('#map-view');
 
   const visible = state.properties
     .filter((p) => state.filter === 'all' || p.listingType === state.filter)
     .sort((a, b) => (STATUS_WEIGHT[a.status] ?? 0) - (STATUS_WEIGHT[b.status] ?? 0));
 
   grid.removeAttribute('aria-busy');
+  grid.hidden = state.view !== 'grid';
+  mapView.hidden = state.view !== 'map';
+
+  if (state.view === 'map') {
+    empty.hidden = true;
+    renderMap(visible);
+    return;
+  }
+
   grid.innerHTML = visible.map(propertyCard).join('');
   empty.hidden = visible.length > 0;
 }
@@ -257,16 +343,69 @@ function renderTeam() {
     .join('');
 }
 
+function projectCard(project) {
+  const images = project.images || [];
+  const coverUrl = imageUrl(images[0], { width: 760, height: 570 });
+  const count = images.length;
+  const slides = images
+    .map((image, index) => {
+      const url = imageUrl(image, { width: 760, height: 570 });
+      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || project.title)}"
+        data-card-slide="${index}" ${index ? 'hidden loading="lazy"' : 'loading="lazy"'}
+        decoding="async">`;
+    })
+    .join('');
+
+  return `
+    <article class="card project-card" data-project-id="${escapeHtml(project._id)}" data-card-index="0">
+      <div class="card-media${coverUrl ? '' : ' is-empty'}">
+        ${slides}
+        <span class="badge">Projeto</span>
+        ${count > 1
+          ? `<button class="card-carousel-nav prev" type="button" data-card-step="-1"
+                aria-label="Fotografia anterior">${icon('chev-l')}</button>
+             <button class="card-carousel-nav next" type="button" data-card-step="1"
+                aria-label="Fotografia seguinte">${icon('chev-r')}</button>
+             <span class="photo-count" data-card-count aria-live="polite">1 / ${count}</span>`
+          : ''}
+      </div>
+      <button class="card-body" type="button" data-open-project
+        aria-label="Ver detalhes de ${escapeHtml(project.title)}">
+        <p class="card-meta">
+          ${icon('pin')}<span>${escapeHtml(project.location || 'Porto e região')}</span>
+        </p>
+        <h3>${escapeHtml(project.title)}</h3>
+        ${project.subtitle ? `<p class="card-subtitle">${escapeHtml(project.subtitle)}</p>` : ''}
+        ${project.summary ? `<p class="card-excerpt">${escapeHtml(project.summary)}</p>` : ''}
+        <span class="card-foot">
+          <span class="card-agent">Edizur</span>
+          <span class="card-cta">Ver projeto ${icon('arrow')}</span>
+        </span>
+      </button>
+    </article>`;
+}
+
+function renderProjects() {
+  const grid = $('#projects-grid');
+  const empty = $('#projects-empty');
+  if (!grid) return;
+
+  grid.removeAttribute('aria-busy');
+  grid.innerHTML = state.projects.map(projectCard).join('');
+  empty.hidden = state.projects.length > 0;
+  grid.closest('section').hidden = false;
+}
+
 /* ---------- detail modal ---------- */
 
-function galleryMarkup(property) {
-  const images = property.images || [];
+function galleryMarkup(item) {
+  const images = item.images || [];
   if (!images.length) return '';
 
   const slides = images
     .map((image, index) => {
       const url = imageUrl(image, { width: 1200, height: 800 });
-      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || property.title)}"
+      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || item.title)}"
         data-slide="${index}" ${index ? 'hidden' : ''} ${index ? 'loading="lazy"' : ''}>`;
     })
     .join('');
@@ -354,6 +493,49 @@ function detailMarkup(property) {
     </div>`;
 }
 
+function projectDetailMarkup(project) {
+  const email = state.settings?.email || CONFIG.fallbackEmail;
+  const phone = (state.settings?.phone || '').replace(/\D/g, '');
+  const projectUrl = new URL(location.href);
+  projectUrl.search = '';
+  projectUrl.hash = `projeto-${project._id}`;
+
+  const message = `Olá, gostaria de saber mais sobre o projeto "${project.title}".\n\n${projectUrl.href}`;
+  const subject = `Projeto: ${project.title}`;
+  const whatsappUrl = phone
+    ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+    : '';
+  const emailUrl =
+    'https://mail.google.com/mail/?view=cm&fs=1' +
+    `&to=${encodeURIComponent(email)}` +
+    `&su=${encodeURIComponent(subject)}` +
+    `&body=${encodeURIComponent(message)}`;
+
+  return `
+    ${galleryMarkup(project)}
+    <div class="modal-content">
+      <p class="eyebrow"><span class="dot"></span>Projeto</p>
+      <h2 id="modal-title">${escapeHtml(project.title)}</h2>
+      ${project.subtitle ? `<p class="modal-subtitle">${escapeHtml(project.subtitle)}</p>` : ''}
+      ${project.location
+        ? `<dl class="spec-grid"><div class="spec"><dt>Localização</dt><dd>${escapeHtml(project.location)}</dd></div></dl>`
+        : ''}
+      ${project.description ? `<p class="modal-desc">${escapeHtml(project.description)}</p>` : ''}
+      <div class="modal-agent">
+        <span class="who">
+          <strong>Edizur</strong>
+          <span>Construção e Imobiliária</span>
+        </span>
+        <span class="modal-actions">
+          ${whatsappUrl
+            ? `<a class="btn btn-gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${icon('message')}Enviar mensagem</a>`
+            : ''}
+          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}" target="_blank" rel="noopener">${icon('mail')}Enviar e-mail</a>
+        </span>
+      </div>
+    </div>`;
+}
+
 function showSlide(index) {
   const gallery = $('#gallery');
   if (!gallery) return;
@@ -370,6 +552,7 @@ function openProperty(id, { updateHash = true } = {}) {
   const property = state.properties.find((item) => item._id === id);
   if (!property) return;
 
+  state.modalKind = 'property';
   $('#modal-body').innerHTML = detailMarkup(property);
   $('#modal').hidden = false;
   document.body.style.overflow = 'hidden';
@@ -379,12 +562,29 @@ function openProperty(id, { updateHash = true } = {}) {
   if (updateHash) history.replaceState(null, '', `#imovel-${id}`);
 }
 
+function openProject(id, { updateHash = true } = {}) {
+  const project = state.projects.find((item) => item._id === id);
+  if (!project) return;
+
+  state.modalKind = 'project';
+  $('#modal-body').innerHTML = projectDetailMarkup(project);
+  $('#modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+  state.gallery = 0;
+  $('.modal-close').focus();
+
+  if (updateHash) history.replaceState(null, '', `#projeto-${id}`);
+}
+
 function closeModal() {
   $('#modal').hidden = true;
   $('#modal-body').innerHTML = '';
   document.body.style.overflow = '';
   state.gallery = null;
-  if (location.hash.startsWith('#imovel-')) history.replaceState(null, '', location.pathname);
+  state.modalKind = null;
+  if (/^#(imovel|projeto)-/.test(location.hash)) {
+    history.replaceState(null, '', location.pathname);
+  }
 }
 
 /* ---------- events ---------- */
@@ -413,6 +613,19 @@ function bindEvents() {
     renderProperties();
   });
 
+  $('#view-switch').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-view]');
+    if (!button || button.dataset.view === state.view) return;
+
+    state.view = button.dataset.view;
+    for (const option of $$('#view-switch button')) {
+      const active = option === button;
+      option.classList.toggle('is-active', active);
+      option.setAttribute('aria-pressed', String(active));
+    }
+    renderProperties();
+  });
+
   $('#grid').addEventListener('click', (event) => {
     const step = event.target.closest('[data-card-step]');
     if (step) {
@@ -423,6 +636,18 @@ function bindEvents() {
     if (!event.target.closest('[data-open-property]')) return;
     const card = event.target.closest('.card[data-id]');
     if (card) openProperty(card.dataset.id);
+  });
+
+  $('#projects-grid')?.addEventListener('click', (event) => {
+    const step = event.target.closest('[data-card-step]');
+    if (step) {
+      stepCardGallery(step.closest('.card'), Number(step.dataset.cardStep));
+      return;
+    }
+
+    if (!event.target.closest('[data-open-project]')) return;
+    const card = event.target.closest('.card[data-project-id]');
+    if (card) openProject(card.dataset.projectId);
   });
 
   $('#modal').addEventListener('click', (event) => {
@@ -452,17 +677,22 @@ async function init() {
   bindEvents();
 
   try {
-    const { settings, agents, properties } = await loadContent();
+    const { settings, agents, properties, projects } = await loadContent();
     state.settings = settings || null;
     state.agents = agents || [];
     state.properties = properties || [];
+    state.projects = projects || [];
 
     applySettings(state.settings);
     renderTeam();
     renderProperties();
+    renderProjects();
 
-    const match = location.hash.match(/^#imovel-(.+)$/);
-    if (match) openProperty(match[1], { updateHash: false });
+    const propertyMatch = location.hash.match(/^#imovel-(.+)$/);
+    if (propertyMatch) openProperty(propertyMatch[1], { updateHash: false });
+
+    const projectMatch = location.hash.match(/^#projeto-(.+)$/);
+    if (projectMatch) openProject(projectMatch[1], { updateHash: false });
   } catch (error) {
     console.error('[edizur] falha ao carregar conteúdo', error);
     $('#grid').innerHTML = '';

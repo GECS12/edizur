@@ -23,6 +23,7 @@ Do lado esquerdo tem:
 | **Procuras de clientes** | O que os nossos clientes compradores procuram |
 | **Em destaque** | Os que aparecem primeiro no site |
 | **Todos os imóveis** | Lista completa |
+| **Projetos** | Obras e portfólio de construção / reabilitação |
 | **Consultores** | As suas fotografias e contactos |
 | **Definições do Site** | Textos e imagem da página inicial, contactos e redes sociais |
 
@@ -35,6 +36,9 @@ Do lado esquerdo tem:
    - **Tipo de anúncio** — *Imóvel para venda* ou *Procura de cliente*
    - **Estado** — *Disponível*, *Reservado* ou *Vendido*
    - **Localização** — ex.: *Foz do Douro, Porto*
+   - **Posição no mapa** — latitude e longitude que colocam o imóvel no mapa do
+     site. No Google Maps, clique com o botão direito no local para copiar as
+     coordenadas. Use uma posição aproximada se não quiser revelar a porta exata.
    - **Preço** — só números, sem pontos nem o símbolo €. Escreva `580000`, não `580.000 €`
    - **Consultor responsável** — clique e escolha o seu nome
    - **Destacar** — ligue para o imóvel aparecer primeiro no site
@@ -119,3 +123,14 @@ Até 24 por imóvel. Não é preciso reduzir o tamanho antes — o sistema trata
 **O imóvel não aparece no site.**
 Quase sempre é uma destas: falta clicar em **Publish**, ou o browser está a mostrar
 a página guardada em memória (recarregue com `Ctrl+F5`).
+
+**O imóvel aparece na lista, mas não no mapa.**
+Abra o imóvel, preencha **Posição no mapa** no separador *Principal* e volte a
+publicar.
+
+## 6. Projetos (portfólio)
+
+No menu **Projetos** pode editar as obras que aparecem na secção *Projetos
+desenvolvidos* do site. Cada ficha tem título, subtítulo, localização, resumo,
+descrição completa e fotografias (a primeira é a capa). Use **Ordem no site**
+para decidir a sequência (1, 2, 3…). Depois de gravar, clique em **Publish**.

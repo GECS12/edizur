@@ -1,4 +1,5 @@
 import type {StructureResolver} from 'sanity/structure'
+import {ProjectsIcon} from '@sanity/icons/Projects'
 import {CogIcon} from '@sanity/icons/Cog'
 import {HomeIcon} from '@sanity/icons/Home'
 import {SearchIcon} from '@sanity/icons/Search'
@@ -44,6 +45,15 @@ export const structure: StructureResolver = (S) =>
         .title('Todos os imóveis')
         .icon(HomeIcon)
         .child(S.documentTypeList('property').title('Todos os imóveis')),
+
+      S.listItem()
+        .title('Projetos')
+        .icon(ProjectsIcon)
+        .child(
+          S.documentTypeList('project')
+            .title('Projetos')
+            .defaultOrdering([{field: 'sortOrder', direction: 'asc'}]),
+        ),
 
       S.listItem()
         .title('Consultores')

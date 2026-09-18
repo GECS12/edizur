@@ -33,7 +33,7 @@ edizur/
 │   ├── hero.jpg           # imagem de reserva, caso as Definições não tenham imagem
 │   └── favicon.svg
 ├── studio/                # Sanity Studio (o "painel de gestão")
-│   ├── schemaTypes/       # modelo de conteúdo (Imóvel, Consultor, Definições)
+│   ├── schemaTypes/       # modelo de conteúdo (Imóvel, Projeto, Consultor, Definições)
 │   ├── structure/         # organização do menu lateral do Studio
 │   ├── scripts/seed.mjs   # conteúdo de exemplo (já executado)
 │   ├── sanity.config.ts
@@ -127,7 +127,7 @@ password) e a partir daí usa apenas https://edizur.sanity.studio. Entrega-lhes 
 ## Modelo de conteúdo
 
 **Imóvel** — título, tipo de anúncio (`venda` ou `procura`), estado
-(disponível/reservado/vendido), localização, preço, preço sob consulta, consultor
+(disponível/reservado/vendido), localização, posição no mapa, preço, preço sob consulta, consultor
 responsável, destaque, descrição, tipologia, área, quartos, casas de banho,
 certificado energético, características, referência interna, data de publicação e
 galeria de fotografias (a primeira é a capa, arrastáveis para reordenar).
@@ -172,6 +172,8 @@ não são um problema.
 - Rascunhos não aparecem no site: a consulta exclui `drafts.**`. Só documentos
   publicados são visíveis.
 - Cada imóvel tem um link partilhável: `…/#imovel-<id>` abre a ficha diretamente.
+- O catálogo tem vistas de lista e mapa. O mapa usa Leaflet + OpenStreetMap e
+  mostra apenas imóveis com o campo *Posição no mapa* preenchido.
 - O catálogo é desenhado no browser. Se um dia o SEO das fichas individuais passar a
   ser prioritário, o passo seguinte natural é gerar páginas estáticas com Astro +
   webhook da Netlify (o modelo de conteúdo não precisa de mudar).

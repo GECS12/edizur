@@ -85,6 +85,14 @@ export const property = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: 'mapLocation',
+      title: 'Posição no mapa',
+      description:
+        'Latitude e longitude usadas na vista de mapa do site. Imóveis sem esta posição aparecem apenas na lista.',
+      type: 'geopoint',
+      group: 'principal',
+    }),
+    defineField({
       name: 'price',
       title: 'Preço (€)',
       description: 'Apenas números. Nas procuras, indique o orçamento máximo do cliente.',

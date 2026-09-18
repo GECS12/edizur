@@ -20,7 +20,9 @@
 <link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
 <link rel="preconnect" href="https://cdn.sanity.io">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260918-7">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin>
+<link rel="stylesheet" href="styles.css?v=20260918-9">
 </head>
 <body>
 
@@ -43,6 +45,7 @@
   <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.8"/><circle cx="12" cy="12" r="3.9"/><circle cx="17.1" cy="6.9" r=".6"/></symbol>
   <symbol id="i-facebook" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4.8"/><path d="M15.2 8.1h-1.3c-1 0-1.6.6-1.6 1.6v10.8M10.2 12.4h4.3"/></symbol>
   <symbol id="i-message" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8.5 8 8.8 8.8 0 0 1-3.7-.9L4 20l1.3-3.7A8 8 0 1 1 20 11.5Z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx=".5"/><rect x="14" y="3.5" width="6.5" height="6.5" rx=".5"/><rect x="3.5" y="14" width="6.5" height="6.5" rx=".5"/><rect x="14" y="14" width="6.5" height="6.5" rx=".5"/></symbol>
 </svg>
 
 <a class="skip-link" href="#imoveis">Saltar para os imóveis</a>
@@ -62,6 +65,7 @@
     <nav class="nav" id="nav" aria-label="Navegação principal">
       <a href="#inicio">Início</a>
       <a href="#imoveis">Imóveis</a>
+      <a href="#projetos">Projetos</a>
       <a href="#servicos">Serviços</a>
       <a href="#equipa">Equipa</a>
       <a href="#contactos">Contactos</a>
@@ -137,10 +141,20 @@
           <p class="eyebrow">Catálogo</p>
           <h2>Imóveis em destaque</h2>
         </div>
-        <div class="filters" id="filters" role="tablist" aria-label="Filtrar imóveis">
-          <button role="tab" class="is-active" data-filter="all" aria-selected="true">Todos</button>
-          <button role="tab" data-filter="venda" aria-selected="false">Para venda</button>
-          <button role="tab" data-filter="procura" aria-selected="false">Procuras</button>
+        <div class="catalog-controls">
+          <div class="filters" id="filters" role="tablist" aria-label="Filtrar imóveis">
+            <button role="tab" class="is-active" data-filter="all" aria-selected="true">Todos</button>
+            <button role="tab" data-filter="venda" aria-selected="false">Para venda</button>
+            <button role="tab" data-filter="procura" aria-selected="false">Procuras</button>
+          </div>
+          <div class="view-switch" id="view-switch" aria-label="Modo de visualização">
+            <button type="button" class="is-active" data-view="grid" aria-pressed="true">
+              <svg class="ico"><use href="#i-grid"></use></svg>Lista
+            </button>
+            <button type="button" data-view="map" aria-pressed="false">
+              <svg class="ico"><use href="#i-pin"></use></svg>Mapa
+            </button>
+          </div>
         </div>
       </div>
 
@@ -151,6 +165,31 @@
       </div>
 
       <p class="empty" id="empty" hidden>Não existem imóveis nesta categoria neste momento.</p>
+      <div class="map-view" id="map-view" hidden>
+        <div class="property-map" id="property-map" aria-label="Mapa dos imóveis"></div>
+        <p class="empty map-empty" id="map-empty" hidden>
+          Não existem imóveis com posição no mapa nesta categoria.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="projects" id="projetos">
+    <div class="wrap">
+      <div class="section-head center">
+        <p class="eyebrow">Portfólio</p>
+        <h2>Projetos desenvolvidos</h2>
+        <p class="section-lead">
+          Construção, remodelação e reabilitação — obras que reflectem rigor, qualidade e experiência.
+        </p>
+        <span class="rule" aria-hidden="true"></span>
+      </div>
+      <div class="grid" id="projects-grid" aria-busy="true">
+        <div class="card skeleton" aria-hidden="true"></div>
+        <div class="card skeleton" aria-hidden="true"></div>
+        <div class="card skeleton" aria-hidden="true"></div>
+      </div>
+      <p class="empty" id="projects-empty" hidden>Ainda não existem projetos publicados.</p>
     </div>
   </section>
 
@@ -198,6 +237,8 @@
   </div>
 </div>
 
-<script src="app.js?v=20260918-7"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin></script>
+<script src="app.js?v=20260918-9"></script>
 </body>
 </html>
