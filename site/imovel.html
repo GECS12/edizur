@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Imóvel — Edizur</title>
+<meta name="description" content="Ficha de imóvel Edizur — imobiliária no Porto e região.">
+<link rel="canonical" href="https://edizur.pt/">
+<link rel="alternate" hreflang="pt-PT" href="https://edizur.pt/">
+<link rel="alternate" hreflang="en" href="https://edizur.pt/">
+<link rel="alternate" hreflang="x-default" href="https://edizur.pt/">
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_PT">
+<meta property="og:site_name" content="Edizur">
+<meta property="og:title" content="Imóvel — Edizur">
+<meta property="og:description" content="Ficha de imóvel Edizur no Porto e região.">
+<meta property="og:image" content="https://cdn.sanity.io/images/a5nclqso/production/b2ef405180bb100562d7fcd564c7faa8afef99d5-1800x1200.jpg?w=1200&h=630&fit=crop&auto=format">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#EDEBE6">
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/source-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
+<link rel="preconnect" href="https://cdn.sanity.io">
+<link rel="stylesheet" href="fonts.css?v=20260918-26">
+<link rel="stylesheet" href="styles.css?v=20260918-26">
+<script>
+  (() => {
+    const theme = localStorage.getItem('edizur-theme');
+    const lang = localStorage.getItem('edizur-lang') || 'pt';
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#121412');
+    }
+    document.documentElement.setAttribute('lang', lang === 'en' ? 'en' : 'pt-PT');
+    document.documentElement.setAttribute('data-lang', lang);
+  })();
+</script>
+</head>
+<body class="page-property" data-page="property">
+
+<main>
+  <section class="property-page" id="ficha">
+    <div class="wrap">
+      <p class="property-back">
+        <a href="index.html#imoveis" data-i18n="ctaListings">Ver imóveis</a>
+      </p>
+      <div id="property-detail" aria-busy="true"></div>
+    </div>
+  </section>
+</main>
+
+<script defer src="chrome.js?v=20260918-26"></script>
+<script defer src="i18n.js?v=20260918-26"></script>
+<script defer src="app.js?v=20260918-26"></script>
+</body>
+</html>

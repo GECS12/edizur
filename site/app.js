@@ -31,7 +31,7 @@ const AGENTS_QUERY = `"agents": *[_type == "agent" && !(_id in path("drafts.**")
 
 const PROPERTIES_QUERY = `"properties": *[_type == "property" && !(_id in path("drafts.**"))]
   | order(coalesce(featured, false) desc, coalesce(publishedAt, _createdAt) desc){
-    _id, title, titleEn, listingType, status, price, priceOnRequest,
+    _id, title, titleEn, "slug": slug.current, status, price, priceOnRequest,
     location, locationEn, typology,
     area, areaUtil, areaBruta, areaTerreno, areaGaragem,
     bedrooms, suites, bathrooms, parkingSpaces, floor, yearBuilt, condoFee,
@@ -75,7 +75,6 @@ const state = {
   projects: [],
   agents: [],
   settings: null,
-  filter: 'all',
   typology: 'all',
   price: 'all',
   view: 'grid',
@@ -178,8 +177,30 @@ function priceLabel(property) {
   return euro.format(property.price);
 }
 
-function typeLabel(property) {
-  return property.listingType === 'procura' ? t('wanted') : t('sale');
+function typeLabel() {
+  return t('sale');
+}
+
+function propertyHref(property) {
+  if (property?.slug) return `imovel.html?slug=${encodeURIComponent(property.slug)}`;
+  return `index.html#imovel-${property._id}`;
+}
+
+function propertyPrettyPath(property) {
+  if (property?.slug) return `https://edizur.pt/imovel/${encodeURIComponent(property.slug)}`;
+  return `https://edizur.pt/#imovel-${property._id}`;
+}
+
+function readPropertySlug() {
+  const params = new URLSearchParams(location.search);
+  const fromQuery = params.get('slug');
+  if (fromQuery) return fromQuery.trim();
+  const parts = location.pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+  const idx = parts.indexOf('imovel');
+  if (idx >= 0 && parts[idx + 1] && !parts[idx + 1].endsWith('.html')) {
+    return decodeURIComponent(parts[idx + 1]);
+  }
+  return '';
 }
 
 function formatArea(value) {
@@ -376,6 +397,8 @@ function applySettings(settings) {
   const hero = $('#hero-image');
   if (heroUrl && hero) {
     hero.src = heroUrl;
+    const source = hero.closest('picture')?.querySelector('source');
+    if (source) source.srcset = heroUrl;
     hero.alt = heroSource?.alt || 'Edizur — construção e imobiliária no Porto';
     setOgImage(imageUrl(heroSource, { width: 1200, height: 630, q: 72 }));
   }
@@ -423,7 +446,7 @@ function propertyCard(property) {
     <article class="card reveal" data-id="${escapeHtml(property._id)}" data-card-index="0">
       <div class="card-media${coverUrl ? '' : ' is-empty'}">
         ${slides}
-        <span class="badge${property.listingType === 'procura' ? ' is-procura' : ''}">${typeLabel(property)}</span>
+        <span class="badge">${typeLabel()}</span>
         ${status ? `<span class="badge-status">${status}</span>` : ''}
         <span class="card-price">${escapeHtml(priceLabel(property))}</span>
         ${count > 1
@@ -434,7 +457,7 @@ function propertyCard(property) {
              <span class="photo-count" data-card-count aria-live="polite">1 / ${count}</span>`
           : ''}
       </div>
-      <button class="card-body" type="button" data-open-property
+      <a class="card-body" href="${escapeHtml(propertyHref(property))}" data-open-property
         aria-label="${escapeHtml(t('seeDetails'))}: ${escapeHtml(title)}">
         <p class="card-meta">
           ${icon('pin')}<span>${escapeHtml(location)}</span>
@@ -448,7 +471,7 @@ function propertyCard(property) {
           <span class="card-agent">${escapeHtml(property.agent?.name || t('teamDefault'))}</span>
           <span class="card-cta">${escapeHtml(t('seeDetails'))} ${icon('arrow')}</span>
         </span>
-      </button>
+      </a>
     </article>`;
 }
 
@@ -521,7 +544,9 @@ async function renderMap(properties) {
       `<span class="map-tooltip-price">${escapeHtml(priceLabel(property))}</span>`,
       { className: 'edizur-map-tooltip', direction: 'top', offset: [0, -7] },
     );
-    marker.on('click', () => openProperty(property._id));
+    marker.on('click', () => {
+      location.href = propertyHref(property);
+    });
     marker.addTo(state.mapMarkers);
   }
 
@@ -539,7 +564,6 @@ function renderProperties() {
   if (!grid) return;
 
   const visible = state.properties
-    .filter((p) => state.filter === 'all' || p.listingType === state.filter)
     .filter((p) => state.typology === 'all' || p.typology === state.typology)
     .filter((p) => matchesPrice(p, state.price))
     .sort((a, b) => (STATUS_WEIGHT[a.status] ?? 0) - (STATUS_WEIGHT[b.status] ?? 0));
@@ -731,11 +755,8 @@ function detailMarkup(property) {
   const place = loc(property, 'location');
   const email = agent?.email || state.settings?.email || CONFIG.fallbackEmail;
   const phone = digits(agent?.phone || contactPhone());
-  const propertyUrl = new URL(window.location.href);
-  propertyUrl.search = '';
-  propertyUrl.hash = `imovel-${property._id}`;
-
-  const message = `Olá, tenho interesse em "${title}".\n\n${propertyUrl.href}`;
+  const propertyUrl = propertyPrettyPath(property);
+  const message = `Olá, tenho interesse em "${title}".\n\n${propertyUrl}`;
   const subject = `Interesse: ${title}`;
   const whatsappUrl = phone
     ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
@@ -767,14 +788,13 @@ function detailMarkup(property) {
     status && [t('status'), status],
   ].filter(Boolean);
 
+  const heading = PAGE === 'property' ? 'h1' : 'h2';
   return `
     ${galleryMarkup(property)}
-    <div class="modal-content">
-      <p class="eyebrow"><span class="dot"></span>${typeLabel(property)}${property.featured ? ` · ${t('featured')}` : ''}</p>
-      <h2 id="modal-title">${escapeHtml(title)}</h2>
-      <p class="modal-price">
-        ${property.listingType === 'procura' && !property.priceOnRequest ? t('budgetUpTo') : ''}${escapeHtml(priceLabel(property))}
-      </p>
+    <div class="modal-content property-panel">
+      <p class="eyebrow"><span class="dot"></span>${typeLabel()}${property.featured ? ` · ${t('featured')}` : ''}</p>
+      <${heading} id="modal-title">${escapeHtml(title)}</${heading}>
+      <p class="modal-price">${escapeHtml(priceLabel(property))}</p>
 
       ${rows.length
         ? `<dl class="spec-grid">${rows
@@ -888,14 +908,51 @@ function openProperty(id, { updateHash = true } = {}) {
   const property = state.properties.find((item) => item._id === id);
   if (!property) return;
 
+  if (PAGE !== 'property' && property.slug) {
+    location.href = propertyHref(property);
+    return;
+  }
+
   state.modalKind = 'property';
   $('#modal-body').innerHTML = detailMarkup(property);
   $('#modal').hidden = false;
   document.body.style.overflow = 'hidden';
   state.gallery = 0;
-  $('.modal-close').focus();
+  $('.modal-close')?.focus();
 
-  if (updateHash) history.replaceState(null, '', `#imovel-${id}`);
+  if (updateHash && PAGE === 'property') history.replaceState(null, '', propertyHref(property));
+}
+
+function renderPropertyPage() {
+  const mount = $('#property-detail');
+  if (!mount) return;
+
+  const slug = readPropertySlug();
+  const property =
+    state.properties.find((item) => item.slug === slug) ||
+    state.properties.find((item) => item._id === slug);
+
+  if (!property) {
+    mount.innerHTML = `<p class="empty">${escapeHtml(t('propertyMissing'))}</p>`;
+    return;
+  }
+
+  document.title = `${loc(property, 'title')} — Edizur`;
+  const desc = loc(property, 'description') || loc(property, 'location') || '';
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc && desc) metaDesc.setAttribute('content', desc.slice(0, 160));
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  if (ogTitle) ogTitle.setAttribute('content', loc(property, 'title'));
+  const cover = imageUrl(property.images?.[0], { width: 1200, height: 630, q: 72 });
+  if (cover) setOgImage(cover);
+  const canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical && property.slug) {
+    canonical.setAttribute('href', `https://edizur.pt/imovel/${encodeURIComponent(property.slug)}`);
+  }
+
+  mount.innerHTML = detailMarkup(property);
+  state.gallery = 0;
+  observeReveals(mount);
 }
 
 function openProject(id, { updateHash = true } = {}) {
@@ -977,7 +1034,6 @@ function bindContactForm() {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (form.querySelector('[name="bot-field"]')?.value) return;
-
     if (!form.reportValidity()) return;
 
     const first = form.nome.value.trim();
@@ -985,12 +1041,11 @@ function bindContactForm() {
     const email = form.email.value.trim();
     const message = form.mensagem.value.trim();
     const payload = {
-      name: `${first} ${last}`.trim(),
+      'form-name': form.getAttribute('name') || 'contacto',
+      nome: first,
+      sobrenome: last,
       email,
-      message,
-      _subject: 'Contacto via edizur.pt',
-      _template: 'table',
-      _captcha: 'false',
+      mensagem: message,
     };
 
     if (button) {
@@ -1003,10 +1058,10 @@ function bindContactForm() {
     }
 
     try {
-      const response = await fetch(`https://formsubmit.co/ajax/${inbox}`, {
+      const response = await fetch('/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(payload).toString(),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       form.reset();
@@ -1016,7 +1071,7 @@ function bindContactForm() {
       }
     } catch {
       const subject = encodeURIComponent('Contacto via edizur.pt');
-      const body = encodeURIComponent(`${payload.name}\n${payload.email}\n\n${payload.message}`);
+      const body = encodeURIComponent(`${first} ${last}\n${email}\n\n${message}`);
       window.open(
         `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(inbox)}&su=${subject}&body=${body}`,
         '_blank',
@@ -1047,19 +1102,6 @@ function bindEvents() {
     if (event.target.tagName === 'A') $('#nav').classList.remove('is-open');
   });
 
-  $('#filters')?.addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-filter]');
-    if (!button) return;
-
-    state.filter = button.dataset.filter;
-    for (const tab of $$('#filters button')) {
-      const active = tab === button;
-      tab.classList.toggle('is-active', active);
-      tab.setAttribute('aria-selected', String(active));
-    }
-    renderProperties();
-  });
-
   $('#filter-typology')?.addEventListener('change', (event) => {
     state.typology = event.target.value || 'all';
     renderProperties();
@@ -1086,19 +1128,22 @@ function bindEvents() {
   $('#grid')?.addEventListener('click', (event) => {
     const step = event.target.closest('[data-card-step]');
     if (step) {
+      event.preventDefault();
       stepCardGallery(step.closest('.card'), Number(step.dataset.cardStep));
-      return;
     }
-
-    if (!event.target.closest('[data-open-property]')) return;
-    const card = event.target.closest('.card[data-id]');
-    if (card) openProperty(card.dataset.id);
   });
 
   $('#projects-grid')?.addEventListener('click', (event) => {
     if (!event.target.closest('[data-open-project]')) return;
     const card = event.target.closest('[data-project-id]');
     if (card) openProject(card.dataset.projectId);
+  });
+
+  $('#property-detail')?.addEventListener('click', (event) => {
+    const step = event.target.closest('[data-step]');
+    if (step) return showSlide(state.gallery + Number(step.dataset.step));
+    const goto = event.target.closest('[data-goto]');
+    if (goto) showSlide(Number(goto.dataset.goto));
   });
 
   $('#modal')?.addEventListener('click', (event) => {
@@ -1112,8 +1157,10 @@ function bindEvents() {
   });
 
   document.addEventListener('keydown', (event) => {
-    if ($('#modal')?.hidden !== false) return;
-    if (event.key === 'Escape') closeModal();
+    const modalOpen = $('#modal')?.hidden === false;
+    const onProperty = PAGE === 'property' && $('#gallery');
+    if (!modalOpen && !onProperty) return;
+    if (event.key === 'Escape' && modalOpen) closeModal();
     if (event.key === 'ArrowLeft') showSlide(state.gallery - 1);
     if (event.key === 'ArrowRight') showSlide(state.gallery + 1);
   });
@@ -1124,6 +1171,7 @@ function bindEvents() {
     applySettings(state.settings);
     if (PAGE === 'projects') renderProjects();
     else if (PAGE === 'about' || PAGE === 'contact') renderTeam();
+    else if (PAGE === 'property') renderPropertyPage();
     else if (PAGE === 'home') {
       fillListingFilters();
       renderProperties();
@@ -1174,6 +1222,11 @@ async function init() {
       return;
     }
 
+    if (PAGE === 'property') {
+      renderPropertyPage();
+      return;
+    }
+
     if (PAGE === 'projects') {
       renderProjects();
       const projectMatch = location.hash.match(/^#projeto-(.+)$/);
@@ -1186,10 +1239,19 @@ async function init() {
     renderTeam();
 
     const propertyMatch = location.hash.match(/^#imovel-(.+)$/);
-    if (propertyMatch) openProperty(propertyMatch[1], { updateHash: false });
+    if (propertyMatch) {
+      const found = state.properties.find((item) => item._id === propertyMatch[1]);
+      if (found?.slug) location.replace(propertyHref(found));
+      else openProperty(propertyMatch[1], { updateHash: false });
+    }
   } catch (error) {
     console.error('[edizur] falha ao carregar conteúdo', error);
     if (PAGE === 'about' || PAGE === 'contact') return;
+    if (PAGE === 'property') {
+      const mount = $('#property-detail');
+      if (mount) mount.innerHTML = `<p class="empty">${escapeHtml(t('loadFail'))}</p>`;
+      return;
+    }
     if (PAGE === 'projects') {
       const grid = $('#projects-grid');
       const empty = $('#projects-empty');

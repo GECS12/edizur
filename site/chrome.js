@@ -22,6 +22,8 @@
     ? { href: '#projetos', key: 'skipProjects', text: 'Saltar para os projetos' }
     : page === 'about' || page === 'contact'
       ? { href: '#quem-somos', key: 'skipAbout', text: 'Saltar para Sobre nós' }
+      : page === 'property'
+        ? { href: '#ficha', key: 'skipProperty', text: 'Saltar para o imóvel' }
       : { href: '#imoveis', key: 'skipListings', text: 'Saltar para os imóveis' };
 
   const sprite = `

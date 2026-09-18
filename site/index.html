@@ -25,13 +25,14 @@
 <meta name="theme-color" content="#EDEBE6">
 
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="hero.webp" type="image/webp" fetchpriority="high">
 <link rel="preload" as="image" href="hero.jpg" fetchpriority="high">
 <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/source-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
 <link rel="preconnect" href="https://cdn.sanity.io">
-<link rel="stylesheet" href="fonts.css?v=20260918-15">
-<link rel="stylesheet" href="styles.css?v=20260918-24">
+<link rel="stylesheet" href="fonts.css?v=20260918-26">
+<link rel="stylesheet" href="styles.css?v=20260918-26">
 <script>
   (() => {
     const theme = localStorage.getItem('edizur-theme');
@@ -50,7 +51,10 @@
 <main>
   <section class="hero" id="inicio">
     <div class="hero-plane" aria-hidden="true">
-      <img id="hero-image" src="hero.jpg" alt="Edizur — construção e imobiliária no Porto" width="1800" height="1200" fetchpriority="high" decoding="async">
+      <picture>
+        <source srcset="hero.webp" type="image/webp">
+        <img id="hero-image" src="hero.jpg" alt="Edizur — construção e imobiliária no Porto" width="1800" height="1200" fetchpriority="high" decoding="async">
+      </picture>
     </div>
     <div class="hero-shade" aria-hidden="true"></div>
     <div class="wrap hero-copy">
@@ -72,11 +76,6 @@
           <h2 data-i18n="listingsTitle">Imóveis em destaque</h2>
         </div>
         <div class="catalog-controls">
-          <div class="filters" id="filters" role="tablist" data-i18n-aria="filterListings" aria-label="Filtrar imóveis">
-            <button role="tab" class="is-active" data-filter="all" aria-selected="true" data-i18n="filterAll">Todos</button>
-            <button role="tab" data-filter="venda" aria-selected="false" data-i18n="filterSale">Para venda</button>
-            <button role="tab" data-filter="procura" aria-selected="false" data-i18n="filterWanted">Procuras</button>
-          </div>
           <div class="listing-filters">
             <label class="listing-filter">
               <span data-i18n="typology">Tipologia</span>
@@ -104,11 +103,11 @@
         <div class="card skeleton" aria-hidden="true"></div>
       </div>
 
-      <p class="empty" id="empty" hidden>Não existem imóveis nesta categoria neste momento.</p>
+      <p class="empty" id="empty" hidden>Não existem imóveis disponíveis neste momento.</p>
       <div class="map-view" id="map-view" hidden>
         <div class="property-map" id="property-map" aria-label="Mapa dos imóveis"></div>
         <p class="empty map-empty" id="map-empty" hidden>
-          Não existem imóveis com posição no mapa nesta categoria.
+          Não existem imóveis com posição no mapa neste momento.
         </p>
       </div>
     </div>
@@ -134,7 +133,8 @@
           Fale connosco sobre compra, venda ou investimento imobiliário no Porto e região — terrenos, habitação e obras de construção ou reabilitação.
         </p>
 
-        <form class="contact-form" id="contact-form" novalidate>
+        <form class="contact-form" id="contact-form" name="contacto" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
+          <input type="hidden" name="form-name" value="contacto">
           <p class="honeypot" hidden>
             <label>Não preencher: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
           </p>
@@ -169,7 +169,7 @@
       </div>
 
       <figure class="contact-visual">
-        <img src="assets/contact.jpg?v=20260918-24" alt="Entrada de um imóvel residencial no Porto" width="900" height="1200" loading="lazy" decoding="async">
+        <img src="assets/contact.jpg?v=20260918-26" alt="Entrada de um imóvel residencial no Porto" width="900" height="1200" loading="lazy" decoding="async">
       </figure>
     </div>
   </section>
@@ -186,8 +186,8 @@
   </div>
 </div>
 
-<script defer src="chrome.js?v=20260918-24"></script>
-<script defer src="i18n.js?v=20260918-24"></script>
-<script defer src="app.js?v=20260918-24"></script>
+<script defer src="chrome.js?v=20260918-26"></script>
+<script defer src="i18n.js?v=20260918-26"></script>
+<script defer src="app.js?v=20260918-26"></script>
 </body>
 </html>
