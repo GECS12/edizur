@@ -1,0 +1,34 @@
+# Netlify configuration — the public site is a plain static folder, no build step.
+[build]
+  publish = "site"
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "/styles.css"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/app.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/hero.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Friendly shortcut to the content manager for the two consultants.
+[[redirects]]
+  from = "/gestao"
+  to = "https://edizur.sanity.studio"
+  status = 302
+  force = true
