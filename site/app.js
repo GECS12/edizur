@@ -262,8 +262,18 @@ function galleryMarkup(property) {
 function detailMarkup(property) {
   const agent = property.agent;
   const email = agent?.email || state.settings?.email || CONFIG.fallbackEmail;
-  const subject = encodeURIComponent(`Interesse: ${property.title}`);
-  const phone = agent?.phone?.replace(/\s/g, '');
+  const phone = agent?.phone?.replace(/\D/g, '');
+  const propertyUrl = new URL(location.href);
+  propertyUrl.search = '';
+  propertyUrl.hash = `imovel-${property._id}`;
+
+  const message = `Olá, tenho interesse em "${property.title}".\n\n${propertyUrl.href}`;
+  const subject = `Interesse: ${property.title}`;
+  const whatsappUrl = phone
+    ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+    : '';
+  const emailUrl =
+    `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
   const status = STATUS_LABELS[property.status] || '';
 
   const rows = [
@@ -309,8 +319,10 @@ function detailMarkup(property) {
           <span>${escapeHtml(agent?.role || 'Consultor Imobiliário')}</span>
         </span>
         <span class="modal-actions">
-          ${phone ? `<a class="btn btn-gold" href="tel:${escapeHtml(phone)}">${icon('phone')}Ligar</a>` : ''}
-          <a class="btn btn-ghost" href="mailto:${escapeHtml(email)}?subject=${subject}">${icon('mail')}Enviar e-mail</a>
+          ${whatsappUrl
+            ? `<a class="btn btn-gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${icon('message')}Enviar mensagem</a>`
+            : ''}
+          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}">${icon('mail')}Enviar e-mail</a>
         </span>
       </div>
     </div>`;
