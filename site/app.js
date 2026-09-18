@@ -149,24 +149,37 @@ function renderSocial(settings) {
 }
 
 function propertyCard(property) {
-  const cover = property.images?.[0];
-  const coverUrl = imageUrl(cover, { width: 760, height: 570 });
+  const images = property.images || [];
+  const coverUrl = imageUrl(images[0], { width: 760, height: 570 });
   const status = STATUS_LABELS[property.status] || '';
-  const count = property.images?.length || 0;
+  const count = images.length;
   const specList = specs(property);
+  const slides = images
+    .map((image, index) => {
+      const url = imageUrl(image, { width: 760, height: 570 });
+      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || property.title)}"
+        data-card-slide="${index}" ${index ? 'hidden loading="lazy"' : 'loading="lazy"'}
+        decoding="async">`;
+    })
+    .join('');
 
   return `
-    <button class="card" type="button" data-id="${escapeHtml(property._id)}">
+    <article class="card" data-id="${escapeHtml(property._id)}" data-card-index="0">
       <div class="card-media${coverUrl ? '' : ' is-empty'}">
-        ${coverUrl
-          ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(cover.alt || property.title)}" loading="lazy" decoding="async">`
-          : ''}
+        ${slides}
         <span class="badge${property.listingType === 'procura' ? ' is-procura' : ''}">${typeLabel(property)}</span>
         ${status ? `<span class="badge-status">${status}</span>` : ''}
         <span class="card-price">${escapeHtml(priceLabel(property))}</span>
-        ${count > 1 ? `<span class="photo-count">${count} fotos</span>` : ''}
+        ${count > 1
+          ? `<button class="card-carousel-nav prev" type="button" data-card-step="-1"
+                aria-label="Fotografia anterior">${icon('chev-l')}</button>
+             <button class="card-carousel-nav next" type="button" data-card-step="1"
+                aria-label="Fotografia seguinte">${icon('chev-r')}</button>
+             <span class="photo-count" data-card-count aria-live="polite">1 / ${count}</span>`
+          : ''}
       </div>
-      <div class="card-body">
+      <button class="card-body" type="button" data-open-property
+        aria-label="Ver detalhes de ${escapeHtml(property.title)}">
         <p class="card-meta">
           ${icon('pin')}<span>${escapeHtml(property.location || 'Porto e região')}</span>
         </p>
@@ -179,8 +192,19 @@ function propertyCard(property) {
           <span class="card-agent">${escapeHtml(property.agent?.name || 'Equipa Edizur')}</span>
           <span class="card-cta">Ver detalhes ${icon('arrow')}</span>
         </span>
-      </div>
-    </button>`;
+      </button>
+    </article>`;
+}
+
+function stepCardGallery(card, step) {
+  const slides = $$('[data-card-slide]', card);
+  if (slides.length < 2) return;
+
+  const current = Number(card.dataset.cardIndex) || 0;
+  const next = (current + step + slides.length) % slides.length;
+  card.dataset.cardIndex = String(next);
+  slides.forEach((slide, index) => { slide.hidden = index !== next; });
+  $('[data-card-count]', card).textContent = `${next + 1} / ${slides.length}`;
 }
 
 function renderProperties() {
@@ -390,6 +414,13 @@ function bindEvents() {
   });
 
   $('#grid').addEventListener('click', (event) => {
+    const step = event.target.closest('[data-card-step]');
+    if (step) {
+      stepCardGallery(step.closest('.card'), Number(step.dataset.cardStep));
+      return;
+    }
+
+    if (!event.target.closest('[data-open-property]')) return;
     const card = event.target.closest('.card[data-id]');
     if (card) openProperty(card.dataset.id);
   });
