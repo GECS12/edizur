@@ -25,7 +25,7 @@ const SETTINGS_QUERY = `"settings": *[_id == "siteSettings"][0]{
 }`;
 
 const AGENTS_QUERY = `"agents": *[_type == "agent" && !(_id in path("drafts.**"))] | order(coalesce(sortOrder, 99) asc, name asc){
-  _id, name, role, roleEn, phone, email, "photo": photo{${IMAGE_FIELDS}}
+  _id, name, role, roleEn, bio, bioEn, phone, email, "photo": photo{${IMAGE_FIELDS}}
 }`;
 
 const PROPERTIES_QUERY = `"properties": *[_type == "property" && !(_id in path("drafts.**"))]
@@ -497,7 +497,8 @@ function renderTeam() {
   container.closest('section').hidden = false;
   container.innerHTML = state.agents
     .map((agent) => {
-      const photo = imageUrl(agent.photo, { width: 380, height: 380 });
+      const photo = imageUrl(agent.photo, { width: 480, height: 600, q: 62 });
+      const bio = loc(agent, 'bio');
       const initials = agent.name
         .split(/\s+/)
         .filter(Boolean)
@@ -512,11 +513,14 @@ function renderTeam() {
               ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(agent.name)}" loading="lazy" decoding="async">`
               : `<span class="member-initials" aria-hidden="true">${escapeHtml(initials)}</span>`}
           </div>
-          <h3>${escapeHtml(agent.name)}</h3>
-          <p class="role">${escapeHtml(loc(agent, 'role') || t('roleDefault'))}</p>
-          <div class="member-links">
-            ${agent.phone ? `<a class="chip" href="tel:${escapeHtml(agent.phone.replace(/\s/g, ''))}">${icon('phone')}${escapeHtml(agent.phone)}</a>` : ''}
-            ${agent.email ? `<a class="chip" href="mailto:${escapeHtml(agent.email)}">${icon('mail')}${escapeHtml(agent.email)}</a>` : ''}
+          <div class="member-copy">
+            <h3>${escapeHtml(agent.name)}</h3>
+            <p class="role">${escapeHtml(loc(agent, 'role') || t('roleDefault'))}</p>
+            ${bio ? `<p class="member-bio">${escapeHtml(bio)}</p>` : ''}
+            <div class="member-links">
+              ${agent.phone ? `<a class="chip" href="tel:${escapeHtml(agent.phone.replace(/\s/g, ''))}">${icon('phone')}${escapeHtml(agent.phone)}</a>` : ''}
+              ${agent.email ? `<a class="chip" href="mailto:${escapeHtml(agent.email)}">${icon('mail')}${escapeHtml(agent.email)}</a>` : ''}
+            </div>
           </div>
         </article>`;
     })
@@ -1008,6 +1012,10 @@ function bindEvents() {
 /* ---------- boot ---------- */
 
 async function init() {
+  if (PAGE === 'home' && /^#(equipa|servicos)$/.test(location.hash)) {
+    history.replaceState(null, '', `${location.pathname}#sobre`);
+  }
+
   if (PAGE === 'home' && /^#projeto-/.test(location.hash)) {
     location.replace(`projetos.html${location.hash}`);
     return;

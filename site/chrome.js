@@ -64,8 +64,7 @@
       <a href="index.html#inicio" data-i18n="navHome">Início</a>
       <a href="projetos.html"${current('projetos.html')} data-i18n="navProjects">Projetos</a>
       <a href="index.html#imoveis" data-i18n="navListings">Imóveis</a>
-      <a href="index.html#servicos" data-i18n="navServices">Serviços</a>
-      <a href="index.html#equipa" data-i18n="navTeam">Equipa</a>
+      <a href="index.html#sobre" data-i18n="navAbout">Sobre nós</a>
       <a href="contactos.html"${current('contactos.html')} data-i18n="navContact">Contactos</a>
     </nav>
     <div class="header-tools">
