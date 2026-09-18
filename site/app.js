@@ -273,7 +273,10 @@ function detailMarkup(property) {
     ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
     : '';
   const emailUrl =
-    `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    'https://mail.google.com/mail/?view=cm&fs=1' +
+    `&to=${encodeURIComponent(email)}` +
+    `&su=${encodeURIComponent(subject)}` +
+    `&body=${encodeURIComponent(message)}`;
   const status = STATUS_LABELS[property.status] || '';
 
   const rows = [
@@ -322,7 +325,7 @@ function detailMarkup(property) {
           ${whatsappUrl
             ? `<a class="btn btn-gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${icon('message')}Enviar mensagem</a>`
             : ''}
-          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}">${icon('mail')}Enviar e-mail</a>
+          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}" target="_blank" rel="noopener">${icon('mail')}Enviar e-mail</a>
         </span>
       </div>
     </div>`;
