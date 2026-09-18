@@ -496,3 +496,12 @@ h3 { font-size: 1.35rem; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Netlify injects this badge on free-tier sites; hide it from the public UI. */
+#nl-badge,
+.nl-badge,
+#nl-container,
+#nl-floating,
+[data-netlify-badge] {
+  display: none !important;
+}
