@@ -27,7 +27,9 @@ const QUERY = `{
   "properties": *[_type == "property" && !(_id in path("drafts.**"))]
     | order(coalesce(featured, false) desc, coalesce(publishedAt, _createdAt) desc){
       _id, title, listingType, status, price, priceOnRequest, location, typology,
-      area, bedrooms, bathrooms, energyRating, description, features, reference, featured,
+      area, areaUtil, areaBruta, areaTerreno, areaGaragem,
+      bedrooms, suites, bathrooms, parkingSpaces, floor, yearBuilt, condoFee,
+      energyRating, description, features, reference, featured,
       mapLocation,
       "images": images[]{_key, ${IMAGE_FIELDS}},
       "agent": agent->{_id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}}
@@ -153,10 +155,21 @@ function typeLabel(property) {
   return property.listingType === 'procura' ? t('wanted') : t('sale');
 }
 
+function formatArea(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  return `${new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 1 }).format(value)} m²`;
+}
+
+function usefulArea(property) {
+  return typeof property.areaUtil === 'number' ? property.areaUtil : property.area;
+}
+
 function specs(property) {
+  const util = usefulArea(property);
   return [
     property.typology && { icon: 'bed', value: property.typology },
-    property.area && { icon: 'area', value: `${property.area} m²` },
+    util && { icon: 'area', value: formatArea(util) },
+    property.areaBruta && { icon: 'area', value: `${formatArea(property.areaBruta)} bruta` },
     property.bathrooms && { icon: 'bath', value: `${property.bathrooms} WC` },
     property.energyRating && { icon: 'bolt', value: `Energia ${property.energyRating}` },
   ].filter(Boolean);
@@ -567,13 +580,22 @@ function detailMarkup(property) {
     `&body=${encodeURIComponent(message)}`;
   const status = statusLabel(property.status);
 
+  const util = usefulArea(property);
   const rows = [
     property.reference && [t('reference'), property.reference],
     property.location && [t('location'), property.location],
     property.typology && [t('typology'), property.typology],
-    property.area && [t('area'), `${property.area} m²`],
+    util && [t('areaUtil'), formatArea(util)],
+    typeof property.areaBruta === 'number' && [t('areaBruta'), formatArea(property.areaBruta)],
+    typeof property.areaTerreno === 'number' && [t('areaLand'), formatArea(property.areaTerreno)],
+    typeof property.areaGaragem === 'number' && [t('areaGarage'), formatArea(property.areaGaragem)],
     property.bedrooms && [t('bedrooms'), property.bedrooms],
+    typeof property.suites === 'number' && property.suites > 0 && [t('suites'), property.suites],
     property.bathrooms && [t('bathrooms'), property.bathrooms],
+    typeof property.parkingSpaces === 'number' && property.parkingSpaces > 0 && [t('parking'), property.parkingSpaces],
+    property.floor && [t('floor'), property.floor],
+    property.yearBuilt && [t('yearBuilt'), property.yearBuilt],
+    typeof property.condoFee === 'number' && [t('condoFee'), `${euro.format(property.condoFee)} / ${t('month')}`],
     property.energyRating && [t('energy'), property.energyRating],
     status && [t('status'), status],
   ].filter(Boolean);

@@ -42,10 +42,13 @@ Do lado esquerdo tem:
    - **Preço** — só números, sem pontos nem o símbolo €. Escreva `580000`, não `580.000 €`
    - **Consultor responsável** — clique e escolha o seu nome
    - **Destacar** — ligue para o imóvel aparecer primeiro no site
-4. No separador **Detalhes**, acrescente o que souber: descrição, tipologia, área,
-   quartos, casas de banho, certificado energético e características (garagem,
-   elevador, piscina…). Nada aqui é obrigatório — os campos vazios simplesmente não
-   aparecem no site.
+4. No separador **Detalhes**, acrescente o que souber:
+   - descrição, tipologia, **área útil**, **área bruta**
+   - **área do terreno** e **área da garagem** (só se existirem)
+   - quartos, suites, casas de banho, lugares de estacionamento
+   - piso, ano de construção, condomínio mensal
+   - certificado energético e características (garagem, elevador, piscina…)
+   Nada aqui é obrigatório — os campos vazios simplesmente não aparecem no site.
 5. No separador **Fotografias**, clique em **Add item** e escolha as fotografias
    (pode selecionar várias de uma vez, do computador ou do telemóvel).
    - A **primeira fotografia é a capa** do anúncio.
