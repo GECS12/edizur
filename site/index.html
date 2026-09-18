@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
 <link rel="preconnect" href="https://cdn.sanity.io">
 <link rel="stylesheet" href="fonts.css?v=20260918-15">
-<link rel="stylesheet" href="styles.css?v=20260918-21">
+<link rel="stylesheet" href="styles.css?v=20260918-23">
 <script>
   (() => {
     const theme = localStorage.getItem('edizur-theme');
@@ -48,7 +48,7 @@
       <p class="lead" data-content="heroSubtitle" data-i18n-fallback="heroSubtitle">Obras, reabilitação e imóveis no Porto e região — do primeiro contacto até à entrega.</p>
       <div class="actions">
         <a class="btn btn-light" href="projetos.html" data-i18n="ctaProjects">Ver projetos</a>
-        <a class="btn btn-ghost-light" href="sobre.html#contacto" data-i18n="ctaContact">Fale connosco</a>
+        <a class="btn btn-ghost-light" href="#contacto" data-i18n="ctaContact">Fale connosco</a>
       </div>
     </div>
   </section>
@@ -103,6 +103,66 @@
     </div>
   </section>
 
+  <section class="team-home" id="equipa">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow" data-i18n="teamEyebrow">Equipa</p>
+        <h2 data-i18n="teamTitle">Consultores</h2>
+        <p class="section-lead" data-i18n="teamLead">Acompanham compra, venda e investimento no Porto e região.</p>
+        <a class="text-link" href="sobre.html" data-i18n="teamMore">Conhecer a Edizur</a>
+      </div>
+      <div class="consult-grid" id="home-team"></div>
+    </div>
+  </section>
+
+  <section class="contact-page" id="contacto">
+    <div class="wrap contact-grid">
+      <div class="contact-copy">
+        <h2 data-i18n="contactTitle">Entre em contacto</h2>
+        <p class="contact-intro" data-i18n="contactIntro">
+          Venha conhecer melhor a Edizur e explorar oportunidades de aquisição de terrenos e imóveis para construção. Estamos disponíveis para apresentar soluções que agregam valor e confiança.
+        </p>
+
+        <form class="contact-form" id="contact-form" novalidate>
+          <p class="honeypot" hidden>
+            <label>Não preencher: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
+          </p>
+
+          <div class="form-row two">
+            <label class="field">
+              <span data-i18n="fieldFirstName">Nome</span>
+              <input type="text" name="nome" required autocomplete="given-name" data-i18n-placeholder="phFirstName" placeholder="Nome (obrigatório)">
+            </label>
+            <label class="field">
+              <span data-i18n="fieldLastName">Sobrenome</span>
+              <input type="text" name="sobrenome" required autocomplete="family-name" data-i18n-placeholder="phLastName" placeholder="Sobrenome (obrigatório)">
+            </label>
+          </div>
+
+          <label class="field">
+            <span data-i18n="fieldEmail">E-mail</span>
+            <input type="email" name="email" required autocomplete="email" data-i18n-placeholder="phEmail" placeholder="E-mail (obrigatório)">
+          </label>
+
+          <label class="field">
+            <span data-i18n="fieldMessage">Mensagem</span>
+            <textarea name="mensagem" rows="4" required data-i18n-placeholder="phMessage" placeholder="Mensagem (obrigatório)"></textarea>
+          </label>
+
+          <div class="form-actions">
+            <button class="btn btn-outline" type="submit" data-i18n="formSend">Enviar</button>
+          </div>
+        </form>
+
+        <p class="form-note" id="form-note" hidden></p>
+      </div>
+
+      <figure class="contact-visual">
+        <img src="assets/contact.jpg?v=20260918-15" alt="Intercomunicador à entrada de um imóvel" width="292" height="396" loading="lazy" decoding="async">
+      </figure>
+    </div>
+  </section>
+
 </main>
 
 <div class="modal" id="modal" hidden>
@@ -116,7 +176,7 @@
 </div>
 
 <script src="chrome.js?v=20260918-20"></script>
-<script src="i18n.js?v=20260918-20"></script>
-<script src="app.js?v=20260918-19"></script>
+<script src="i18n.js?v=20260918-23"></script>
+<script src="app.js?v=20260918-23"></script>
 </body>
 </html>

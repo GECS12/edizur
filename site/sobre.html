@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sobre nós — Edizur</title>
-<meta name="description" content="A equipa Edizur: construção e imobiliária no Porto e região. Fale connosco.">
+<meta name="description" content="A Edizur junta construção e imobiliária no Porto e região. Conheça a empresa e os consultores.">
 <link rel="canonical" href="https://edizur.pt/sobre.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Sobre nós — Edizur">
-<meta property="og:description" content="Conheça os consultores Edizur e entre em contacto.">
+<meta property="og:description" content="Conheça a Edizur e os consultores que acompanham cada processo no Porto e região.">
 <meta name="theme-color" content="#EDEBE6">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/source-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
 <link rel="stylesheet" href="fonts.css?v=20260918-15">
-<link rel="stylesheet" href="styles.css?v=20260918-21">
+<link rel="stylesheet" href="styles.css?v=20260918-23">
 <script>
   (() => {
     const theme = localStorage.getItem('edizur-theme');
@@ -33,69 +33,39 @@
     <div class="wrap">
       <p class="eyebrow" data-i18n="aboutEyebrow">Quem somos</p>
       <h1 data-i18n="aboutTitle">Sobre nós</h1>
-      <p class="section-lead left" data-i18n="aboutLead">
+      <p class="section-lead left" data-content="aboutLead" data-i18n-fallback="aboutLead">
         A Edizur junta construção e imobiliária no Porto e região. Conhecemos o terreno, as obras e o mercado — e acompanhamos cada cliente até à entrega.
       </p>
+      <div class="company-copy" data-content="aboutBody" data-content-html="1" data-i18n-html="aboutBody">
+        <p>Não separamos a obra do mercado. Na construção e na reabilitação, o critério é rigor no detalhe, materiais que duram, e uma leitura honesta do que o imóvel é e do que pode vir a ser.</p>
+        <p>Na imobiliária, isso traduz-se em opções com valor real — compra, venda e investimento — sem pressa artificial e com acompanhamento até à escritura. Cada cliente tem um consultor de ponta a ponta: da primeira visita à conclusão do negócio.</p>
+      </div>
     </div>
   </section>
 
   <section class="about">
     <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow" data-i18n="teamEyebrow">Equipa</p>
+        <h2 data-i18n="consultantsTitle">Os consultores</h2>
+        <p class="section-lead" data-i18n="consultantsLead">
+          Conhecem o mercado local e conduzem o processo com proximidade, do primeiro contacto à escritura.
+        </p>
+      </div>
       <div class="about-grid" id="team"></div>
     </div>
   </section>
 
-  <section class="contact-page" id="contacto">
-    <div class="wrap contact-grid">
-      <div class="contact-copy">
-        <h2 data-i18n="contactTitle">Entre em contacto</h2>
-        <p class="contact-intro" data-i18n="contactIntro">
-          Venha conhecer melhor a Edizur e explorar oportunidades de aquisição de terrenos e imóveis para construção. Estamos disponíveis para apresentar soluções que agregam valor e confiança.
-        </p>
-
-        <form class="contact-form" id="contact-form" novalidate>
-          <p class="honeypot" hidden>
-            <label>Não preencher: <input name="bot-field" tabindex="-1" autocomplete="off"></label>
-          </p>
-
-          <div class="form-row two">
-            <label class="field">
-              <span data-i18n="fieldFirstName">Nome</span>
-              <input type="text" name="nome" required autocomplete="given-name" data-i18n-placeholder="phFirstName" placeholder="Nome (obrigatório)">
-            </label>
-            <label class="field">
-              <span data-i18n="fieldLastName">Sobrenome</span>
-              <input type="text" name="sobrenome" required autocomplete="family-name" data-i18n-placeholder="phLastName" placeholder="Sobrenome (obrigatório)">
-            </label>
-          </div>
-
-          <label class="field">
-            <span data-i18n="fieldEmail">E-mail</span>
-            <input type="email" name="email" required autocomplete="email" data-i18n-placeholder="phEmail" placeholder="E-mail (obrigatório)">
-          </label>
-
-          <label class="field">
-            <span data-i18n="fieldMessage">Mensagem</span>
-            <textarea name="mensagem" rows="4" required data-i18n-placeholder="phMessage" placeholder="Mensagem (obrigatório)"></textarea>
-          </label>
-
-          <div class="form-actions">
-            <button class="btn btn-outline" type="submit" data-i18n="formSend">Enviar</button>
-          </div>
-        </form>
-
-        <p class="form-note" id="form-note" hidden></p>
-      </div>
-
-      <figure class="contact-visual">
-        <img src="assets/contact.jpg?v=20260918-15" alt="Intercomunicador à entrada de um imóvel" width="292" height="396" loading="lazy" decoding="async">
-      </figure>
+  <section class="about-cta">
+    <div class="wrap">
+      <a class="btn btn-outline" href="index.html#contacto" data-i18n="ctaContact">Fale connosco</a>
+      <a class="btn btn-ghost" href="index.html#imoveis" data-i18n="ctaListings">Ver imóveis</a>
     </div>
   </section>
 </main>
 
 <script src="chrome.js?v=20260918-20"></script>
-<script src="i18n.js?v=20260918-20"></script>
-<script src="app.js?v=20260918-19"></script>
+<script src="i18n.js?v=20260918-23"></script>
+<script src="app.js?v=20260918-23"></script>
 </body>
 </html>

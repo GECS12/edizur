@@ -19,6 +19,7 @@ const I18N = {
     heroSubtitle: 'Obras, reabilitação e imóveis no Porto e região — do primeiro contacto até à entrega.',
     ctaProjects: 'Ver projetos',
     ctaContact: 'Fale connosco',
+    ctaListings: 'Ver imóveis',
     projectsEyebrow: 'Portfólio',
     projectsTitle: 'Projetos desenvolvidos',
     projectsLead: 'Construção, remodelação e reabilitação — obras que reflectem rigor e experiência.',
@@ -41,6 +42,15 @@ const I18N = {
     aboutTitle: 'Sobre nós',
     aboutLead:
       'A Edizur junta construção e imobiliária no Porto e região. Conhecemos o terreno, as obras e o mercado — e acompanhamos cada cliente até à entrega.',
+    aboutBody:
+      '<p>Não separamos a obra do mercado. Na construção e na reabilitação, o critério é rigor no detalhe, materiais que duram, e uma leitura honesta do que o imóvel é e do que pode vir a ser.</p><p>Na imobiliária, isso traduz-se em opções com valor real — compra, venda e investimento — sem pressa artificial e com acompanhamento até à escritura. Cada cliente tem um consultor de ponta a ponta: da primeira visita à conclusão do negócio.</p>',
+    teamEyebrow: 'Equipa',
+    teamTitle: 'Consultores',
+    teamLead: 'Acompanham compra, venda e investimento no Porto e região.',
+    teamMore: 'Conhecer a Edizur',
+    consultantsTitle: 'Os consultores',
+    consultantsLead:
+      'Conhecem o mercado local e conduzem o processo com proximidade, do primeiro contacto à escritura.',
     footerTagline: 'O seu imóvel, o nosso compromisso.',
     rights: 'Todos os direitos reservados',
     contactTitle: 'Entre em contacto',
@@ -123,6 +133,7 @@ const I18N = {
     heroSubtitle: 'Building, rehabilitation and property across Porto and the region — from first contact to completion.',
     ctaProjects: 'View projects',
     ctaContact: 'Talk to us',
+    ctaListings: 'View properties',
     projectsEyebrow: 'Portfolio',
     projectsTitle: 'Completed projects',
     projectsLead: 'Construction, remodeling and rehabilitation — work defined by rigor and experience.',
@@ -145,6 +156,15 @@ const I18N = {
     aboutTitle: 'About us',
     aboutLead:
       'Edizur brings construction and real estate together in Porto and the surrounding region. We know the ground, the building work and the market — and we stay with each client through to completion.',
+    aboutBody:
+      '<p>We do not treat building work and the market as separate disciplines. In construction and rehabilitation the standard is the same: rigor in the detail, materials that last, and an honest reading of what a property is and what it can become.</p><p>In real estate that means options with real value — buying, selling and investing — without artificial haste, and with support through to completion. Each client has one consultant from first visit to the deed.</p>',
+    teamEyebrow: 'Team',
+    teamTitle: 'Consultants',
+    teamLead: 'They support buying, selling and investing across Porto and the region.',
+    teamMore: 'About Edizur',
+    consultantsTitle: 'The consultants',
+    consultantsLead:
+      'They know the local market and take the process through, from first contact to completion.',
     footerTagline: 'Your property, our commitment.',
     rights: 'All rights reserved',
     contactTitle: 'Get in touch',
@@ -226,6 +246,7 @@ const EdizurUI = {
     });
 
     root.querySelectorAll('[data-i18n-html]').forEach((node) => {
+      if (node.dataset.contentLocked === '1') return;
       const value = this.t(node.dataset.i18nHtml);
       if (value) node.innerHTML = value;
     });

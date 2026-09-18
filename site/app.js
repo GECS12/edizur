@@ -20,12 +20,13 @@ const PAGE = document.body?.dataset?.page || 'home';
 const SETTINGS_QUERY = `"settings": *[_id == "siteSettings"][0]{
   heroTitle, heroTitleEn, heroSubtitle, heroSubtitleEn, region, regionEn,
   email, phone, sellText, sellTextEn, buyText, buyTextEn,
+  aboutLead, aboutLeadEn, aboutBody, aboutBodyEn,
   footerTagline, footerTaglineEn, address, instagram, facebook,
   "heroImage": heroImage{${IMAGE_FIELDS}}
 }`;
 
 const AGENTS_QUERY = `"agents": *[_type == "agent" && !(_id in path("drafts.**"))] | order(coalesce(sortOrder, 99) asc, name asc){
-  _id, name, role, roleEn, bio, bioEn, phone, email, "photo": photo{${IMAGE_FIELDS}}
+  _id, name, role, roleEn, intro, introEn, bio, bioEn, phone, email, "photo": photo{${IMAGE_FIELDS}}
 }`;
 
 const PROPERTIES_QUERY = `"properties": *[_type == "property" && !(_id in path("drafts.**"))]
@@ -249,7 +250,16 @@ function applySettings(settings) {
   for (const node of $$('[data-content]')) {
     const value = loc(settings, node.dataset.content);
     if (value) {
-      node.textContent = value;
+      if (node.dataset.contentHtml === '1') {
+        node.innerHTML = value
+          .split(/\n\s*\n/)
+          .map((part) => part.trim())
+          .filter(Boolean)
+          .map((part) => `<p>${escapeHtml(part)}</p>`)
+          .join('');
+      } else {
+        node.textContent = value;
+      }
       node.dataset.contentLocked = '1';
     } else {
       delete node.dataset.contentLocked;
@@ -485,48 +495,93 @@ function renderProperties() {
   observeReveals(grid);
 }
 
+function agentIntro(agent) {
+  const intro = loc(agent, 'intro');
+  if (intro) return intro;
+  const bio = loc(agent, 'bio');
+  if (!bio) return '';
+  return bio.split(/\n\s*\n/)[0].trim();
+}
+
+function agentInitials(name) {
+  return String(name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
+}
+
+function agentPhoto(agent, size) {
+  const photo = imageUrl(agent.photo, { width: size.width, height: size.height, q: 62 });
+  const initials = agentInitials(agent.name);
+  return `
+    <div class="${size.className}">
+      ${photo
+        ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(agent.name)}" loading="lazy" decoding="async">`
+        : `<span class="member-initials" aria-hidden="true">${escapeHtml(initials)}</span>`}
+    </div>`;
+}
+
+function agentContacts(agent) {
+  return `
+    <div class="member-links">
+      ${agent.phone ? `<a class="chip" href="tel:${escapeHtml(agent.phone.replace(/\s/g, ''))}">${icon('phone')}${escapeHtml(agent.phone)}</a>` : ''}
+      ${agent.email ? `<a class="chip" href="mailto:${escapeHtml(agent.email)}">${icon('mail')}${escapeHtml(agent.email)}</a>` : ''}
+    </div>`;
+}
+
 function renderTeam() {
-  const container = $('#team');
+  const home = $('#home-team');
+  const about = $('#team');
+  const container = home || about;
   if (!container) return;
 
+  const section = container.closest('section');
   if (!state.agents.length) {
-    container.closest('section').hidden = true;
+    if (section) section.hidden = true;
     return;
   }
 
-  container.closest('section').hidden = false;
-  container.innerHTML = state.agents
-    .map((agent) => {
-      const photo = imageUrl(agent.photo, { width: 480, height: 600, q: 62 });
-      const bio = loc(agent, 'bio');
-      const initials = agent.name
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0].toUpperCase())
-        .join('');
+  if (section) section.hidden = false;
 
+  if (home) {
+    home.innerHTML = state.agents
+      .map((agent) => {
+        const intro = agentIntro(agent);
+        return `
+          <article class="consult reveal">
+            ${agentPhoto(agent, { width: 320, height: 400, className: 'consult-photo' })}
+            <div class="consult-copy">
+              <h3>${escapeHtml(agent.name)}</h3>
+              <p class="role">${escapeHtml(loc(agent, 'role') || t('roleDefault'))}</p>
+              ${intro ? `<p class="consult-intro">${escapeHtml(intro)}</p>` : ''}
+              ${agentContacts(agent)}
+            </div>
+          </article>`;
+      })
+      .join('');
+    observeReveals(home);
+    return;
+  }
+
+  about.innerHTML = state.agents
+    .map((agent) => {
+      const bio = loc(agent, 'bio');
       return `
         <article class="member reveal">
-          <div class="member-photo">
-            ${photo
-              ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(agent.name)}" loading="lazy" decoding="async">`
-              : `<span class="member-initials" aria-hidden="true">${escapeHtml(initials)}</span>`}
-          </div>
+          ${agentPhoto(agent, { width: 480, height: 600, className: 'member-photo' })}
           <div class="member-copy">
             <h3>${escapeHtml(agent.name)}</h3>
             <p class="role">${escapeHtml(loc(agent, 'role') || t('roleDefault'))}</p>
             ${bio ? `<p class="member-bio">${escapeHtml(bio)}</p>` : ''}
-            <div class="member-links">
-              ${agent.phone ? `<a class="chip" href="tel:${escapeHtml(agent.phone.replace(/\s/g, ''))}">${icon('phone')}${escapeHtml(agent.phone)}</a>` : ''}
-              ${agent.email ? `<a class="chip" href="mailto:${escapeHtml(agent.email)}">${icon('mail')}${escapeHtml(agent.email)}</a>` : ''}
-            </div>
+            ${agentContacts(agent)}
           </div>
         </article>`;
     })
     .join('');
 
-  observeReveals(container);
+  observeReveals(about);
 }
 
 function projectCard(project) {
@@ -1005,6 +1060,7 @@ function bindEvents() {
     else if (PAGE === 'home') {
       fillListingFilters();
       renderProperties();
+      renderTeam();
     }
   });
 }
@@ -1012,13 +1068,13 @@ function bindEvents() {
 /* ---------- boot ---------- */
 
 async function init() {
-  if (PAGE === 'home' && /^#(equipa|servicos|sobre)$/.test(location.hash)) {
+  if (PAGE === 'home' && /^#(servicos|sobre)$/.test(location.hash)) {
     location.replace('sobre.html');
     return;
   }
 
-  if (PAGE === 'contact') {
-    location.replace('sobre.html#contacto');
+  if (PAGE === 'contact' || (PAGE === 'about' && location.hash === '#contacto')) {
+    location.replace('index.html#contacto');
     return;
   }
 
@@ -1060,6 +1116,7 @@ async function init() {
 
     fillListingFilters();
     renderProperties();
+    renderTeam();
 
     const propertyMatch = location.hash.match(/^#imovel-(.+)$/);
     if (propertyMatch) openProperty(propertyMatch[1], { updateHash: false });
