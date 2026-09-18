@@ -13,8 +13,6 @@ basta ir ao endereço acima — fica com a sessão guardada.
 
 Sugestão: guarde o endereço nos favoritos do telemóvel e do computador.
 
-No site público, o link **Área reservada**, no fundo da página, leva ao mesmo sítio.
-
 ## 2. O menu
 
 Do lado esquerdo tem:

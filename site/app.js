@@ -4,7 +4,6 @@ const CONFIG = {
   projectId: 'a5nclqso',
   dataset: 'production',
   apiVersion: 'v2026-09-18',
-  studioUrl: 'https://edizur.sanity.studio',
   fallbackEmail: 'edizur.imobiliaria@gmail.com',
   foundedYear: 2025,
 };
@@ -419,7 +418,6 @@ async function init() {
   const year = new Date().getFullYear();
   $('#year').textContent =
     year > CONFIG.foundedYear ? `${CONFIG.foundedYear}–${year}` : String(CONFIG.foundedYear);
-  $('#admin-link').href = CONFIG.studioUrl;
   bindEvents();
 
   try {
