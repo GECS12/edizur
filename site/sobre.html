@@ -3,24 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sobre nós — Edizur</title>
-<meta name="description" content="A Edizur junta construção e imobiliária no Porto e região. Conheça a empresa e os consultores.">
+<title>Sobre nós — Edizur | Imobiliária e Construção no Porto</title>
+<meta name="description" content="Conheça a Edizur: construção, reabilitação e imobiliária no Porto e região. Consultores que acompanham compra, venda e investimento até à escritura.">
 <link rel="canonical" href="https://edizur.pt/sobre.html">
+<link rel="alternate" hreflang="pt-PT" href="https://edizur.pt/sobre.html">
+<link rel="alternate" hreflang="en" href="https://edizur.pt/sobre.html">
+<link rel="alternate" hreflang="x-default" href="https://edizur.pt/sobre.html">
+
 <meta property="og:type" content="website">
+<meta property="og:locale" content="pt_PT">
+<meta property="og:locale:alternate" content="en_GB">
+<meta property="og:site_name" content="Edizur">
+<meta property="og:url" content="https://edizur.pt/sobre.html">
 <meta property="og:title" content="Sobre nós — Edizur">
-<meta property="og:description" content="Conheça a Edizur e os consultores que acompanham cada processo no Porto e região.">
+<meta property="og:description" content="Construção e imobiliária no Porto. Conheça a empresa e os consultores Edizur.">
+<meta property="og:image" content="https://cdn.sanity.io/images/a5nclqso/production/b2ef405180bb100562d7fcd564c7faa8afef99d5-1800x1200.jpg?w=1200&h=630&fit=crop&auto=format">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sobre nós — Edizur">
+<meta name="twitter:description" content="Construção e imobiliária no Porto. Conheça a empresa e os consultores.">
+<meta name="twitter:image" content="https://cdn.sanity.io/images/a5nclqso/production/b2ef405180bb100562d7fcd564c7faa8afef99d5-1800x1200.jpg?w=1200&h=630&fit=crop&auto=format">
 <meta name="theme-color" content="#EDEBE6">
+
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/source-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
 <link rel="stylesheet" href="fonts.css?v=20260918-15">
-<link rel="stylesheet" href="styles.css?v=20260918-23">
+<link rel="stylesheet" href="styles.css?v=20260918-24">
 <script>
   (() => {
     const theme = localStorage.getItem('edizur-theme');
     const lang = localStorage.getItem('edizur-lang') || 'pt';
-    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#121412');
+    }
     document.documentElement.setAttribute('lang', lang === 'en' ? 'en' : 'pt-PT');
     document.documentElement.setAttribute('data-lang', lang);
   })();
@@ -64,8 +81,8 @@
   </section>
 </main>
 
-<script src="chrome.js?v=20260918-20"></script>
-<script src="i18n.js?v=20260918-23"></script>
-<script src="app.js?v=20260918-23"></script>
+<script defer src="chrome.js?v=20260918-24"></script>
+<script defer src="i18n.js?v=20260918-24"></script>
+<script defer src="app.js?v=20260918-24"></script>
 </body>
 </html>

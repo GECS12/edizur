@@ -42,7 +42,7 @@ html[data-theme="dark"] {
     radial-gradient(1000px 480px at 80% -10%, rgba(194, 163, 106, .12), transparent 50%),
     linear-gradient(180deg, #121412 0%, #171916 40%, #1b1e1a 100%);
   --header-bg: rgba(18, 20, 18, .9);
-  --card-bg: rgba(255, 255, 255, .03);
+  --card-bg: rgba(255, 255, 255, .07);
   --on-dark: #121412;
   --chrome-bg: rgba(236, 235, 230, .1);
   color-scheme: dark;
@@ -302,25 +302,32 @@ html[data-theme="dark"] .theme-toggle-hint {
 .hero-copy {
   position: relative; z-index: 1;
   padding: clamp(5rem, 12vh, 8rem) var(--gutter) clamp(3.5rem, 8vh, 5.5rem);
-  display: flex; flex-direction: column; align-items: flex-start; gap: 1.35rem;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1.15rem;
   max-width: 1200px; margin: 0 auto; width: 100%;
+  animation: heroCopyIn .9s cubic-bezier(.2, .8, .2, 1) both;
 }
 .hero-brand {
   margin: 0;
   font-family: var(--serif);
-  font-size: clamp(2.8rem, 8vw, 5.5rem);
+  font-size: clamp(3rem, 9vw, 5.75rem);
   font-weight: 600;
   letter-spacing: .02em;
-  line-height: .95;
+  line-height: .92;
   color: #fff;
 }
 .hero .lead { color: rgba(255, 255, 255, .82); max-width: 32rem; }
 .hero h1 {
-  max-width: 14ch;
-  font-size: clamp(1.55rem, 3.2vw, 2.35rem);
-  font-weight: 500;
-  line-height: 1.2;
-  color: rgba(255, 255, 255, .94);
+  max-width: 22ch;
+  margin: 0;
+  font-size: clamp(1.15rem, 2.2vw, 1.55rem);
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: .01em;
+  color: rgba(255, 255, 255, .88);
+}
+@keyframes heroCopyIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 .actions { display: flex; flex-wrap: wrap; gap: .85rem; }
@@ -467,7 +474,7 @@ html[data-theme="dark"] .theme-toggle-hint {
   background: none; border: 0; border-bottom: 2px solid transparent;
   padding: .6rem .9rem; color: var(--slate);
   font-size: .68rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
-  transition: color .2s, border-color .2s;
+  transition: color .25s ease, border-color .25s ease;
 }
 .filters button:hover { color: var(--ink); }
 .filters button.is-active { color: var(--gold); border-color: var(--gold); }
@@ -667,27 +674,43 @@ html[data-theme="dark"] .theme-toggle-hint {
 .about-cta { padding: 0 0 clamp(3.5rem, 7vw, 5.5rem); }
 .about-cta .wrap { display: flex; flex-wrap: wrap; gap: .85rem; }
 .team-home {
-  padding: clamp(3.5rem, 7vw, 5.5rem) 0;
+  padding: clamp(4.25rem, 8vw, 6.5rem) 0;
+  border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
+.team-home .section-head::after {
+  content: "";
+  display: block;
+  width: 2.75rem;
+  height: 2px;
+  margin-top: .35rem;
+  background: var(--gold);
+}
 .consult-grid {
-  margin-top: clamp(2rem, 4vw, 3rem);
+  margin-top: clamp(2.35rem, 4.5vw, 3.25rem);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(1.75rem, 3vw, 2.75rem);
 }
 .consult {
   display: grid;
-  grid-template-columns: 7.25rem minmax(0, 1fr);
+  grid-template-columns: 6.75rem minmax(0, 1fr);
   gap: 1.1rem 1.35rem;
-  align-items: start;
+  align-items: center;
 }
 .consult-photo {
-  width: 7.25rem; height: 9.25rem;
-  border: 1px solid var(--line); background: var(--sand);
+  width: 6.75rem; height: 6.75rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--sand);
 }
-.consult-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; }
-.consult-photo .member-initials { font-size: 1.8rem; }
+.consult-photo img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 18%;
+}
+.consult-photo .member-initials { font-size: 1.65rem; }
 .consult-copy { display: flex; flex-direction: column; align-items: flex-start; }
 .consult h3 { font-size: 1.28rem; margin: 0; line-height: 1.15; }
 .consult .role {
@@ -866,6 +889,7 @@ html[data-theme="dark"] .theme-toggle-hint {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   .hero-plane img { animation: none; }
+  .hero-copy { animation: none; }
 }
 
 /* Netlify injects this badge on free-tier sites; hide it from the public UI. */

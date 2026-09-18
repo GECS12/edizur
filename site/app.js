@@ -240,12 +240,78 @@ function setOgImage(url) {
     document.head.appendChild(meta);
   }
   meta.setAttribute('content', url);
+
+  let twitter = document.querySelector('meta[name="twitter:image"]');
+  if (!twitter) {
+    twitter = document.createElement('meta');
+    twitter.setAttribute('name', 'twitter:image');
+    document.head.appendChild(twitter);
+  }
+  twitter.setAttribute('content', url);
+}
+
+function setThemeColor(theme) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', theme === 'dark' ? '#121412' : '#EDEBE6');
+}
+
+function renderJsonLd(settings) {
+  const existing = document.getElementById('edizur-jsonld');
+  if (existing) existing.remove();
+
+  const email = settings?.email || CONFIG.fallbackEmail;
+  const phone = settings?.phone || CONFIG.fallbackPhone;
+  const region = loc(settings, 'region') || 'Porto e região';
+  const addressLines = String(settings?.address || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const sameAs = [settings?.instagram, settings?.facebook].filter(Boolean);
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': ['Organization', 'RealEstateAgent'],
+    name: 'Edizur',
+    url: 'https://edizur.pt/',
+    logo: 'https://edizur.pt/favicon.svg',
+    description:
+      'Construção, reabilitação e imobiliária no Porto e região. Compra, venda e investimento com acompanhamento até à escritura.',
+    email,
+    telephone: phone,
+    areaServed: {
+      '@type': 'AdministrativeArea',
+      name: region,
+    },
+    address: addressLines.length
+      ? {
+          '@type': 'PostalAddress',
+          streetAddress: addressLines[0],
+          addressLocality: 'Porto',
+          addressCountry: 'PT',
+          ...(addressLines[1] ? { postalCode: addressLines[1].split(/\s+/)[0] } : {}),
+        }
+      : {
+          '@type': 'PostalAddress',
+          addressLocality: 'Porto',
+          addressCountry: 'PT',
+        },
+  };
+  if (sameAs.length) data.sameAs = sameAs;
+
+  const script = document.createElement('script');
+  script.id = 'edizur-jsonld';
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(data);
+  document.head.appendChild(script);
 }
 
 /* ---------- rendering ---------- */
 
 function applySettings(settings) {
-  if (!settings) return;
+  if (!settings) {
+    renderJsonLd(null);
+    return;
+  }
 
   for (const node of $$('[data-content]')) {
     const value = loc(settings, node.dataset.content);
@@ -303,13 +369,14 @@ function applySettings(settings) {
   }
 
   renderSocial(settings);
+  renderJsonLd(settings);
 
   const heroSource = settings.heroImage;
   const heroUrl = imageUrl(heroSource, { width: 1600, height: 1100, q: 68 });
   const hero = $('#hero-image');
   if (heroUrl && hero) {
     hero.src = heroUrl;
-    hero.alt = heroSource?.alt || 'Edizur';
+    hero.alt = heroSource?.alt || 'Edizur — construção e imobiliária no Porto';
     setOgImage(imageUrl(heroSource, { width: 1200, height: 630, q: 72 }));
   }
 }
@@ -551,7 +618,7 @@ function renderTeam() {
         const intro = agentIntro(agent);
         return `
           <article class="consult reveal">
-            ${agentPhoto(agent, { width: 320, height: 400, className: 'consult-photo' })}
+            ${agentPhoto(agent, { width: 320, height: 320, className: 'consult-photo' })}
             <div class="consult-copy">
               <h3>${escapeHtml(agent.name)}</h3>
               <p class="role">${escapeHtml(loc(agent, 'role') || t('roleDefault'))}</p>

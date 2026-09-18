@@ -15,7 +15,7 @@ const I18N = {
     themeToggle: 'Alternar tema escuro',
     themeToggleLight: 'Alternar tema claro',
     themeHint: 'Alternar tema escuro',
-    heroTitle: 'Construção e imobiliária com rigor.',
+    heroTitle: 'Imobiliária e construção no Porto.',
     heroSubtitle: 'Obras, reabilitação e imóveis no Porto e região — do primeiro contacto até à entrega.',
     ctaProjects: 'Ver projetos',
     ctaContact: 'Fale connosco',
@@ -55,7 +55,7 @@ const I18N = {
     rights: 'Todos os direitos reservados',
     contactTitle: 'Entre em contacto',
     contactIntro:
-      'Venha conhecer melhor a Edizur e explorar oportunidades de aquisição de terrenos e imóveis para construção. Estamos disponíveis para apresentar soluções que agregam valor e confiança.',
+      'Fale connosco sobre compra, venda ou investimento imobiliário no Porto e região — terrenos, habitação e obras de construção ou reabilitação.',
     fieldFirstName: 'Nome',
     fieldLastName: 'Sobrenome',
     fieldEmail: 'E-mail',
@@ -129,7 +129,7 @@ const I18N = {
     themeToggle: 'Toggle dark theme',
     themeToggleLight: 'Toggle light theme',
     themeHint: 'Toggle dark theme',
-    heroTitle: 'Construction and real estate with rigor.',
+    heroTitle: 'Real estate and construction in Porto.',
     heroSubtitle: 'Building, rehabilitation and property across Porto and the region — from first contact to completion.',
     ctaProjects: 'View projects',
     ctaContact: 'Talk to us',
@@ -169,7 +169,7 @@ const I18N = {
     rights: 'All rights reserved',
     contactTitle: 'Get in touch',
     contactIntro:
-      'Get to know Edizur and explore opportunities to acquire land and properties for construction. We are ready to present solutions that add value and confidence.',
+      'Talk to us about buying, selling or investing in Porto and the region — homes, land, and construction or rehabilitation projects.',
     fieldFirstName: 'First name',
     fieldLastName: 'Last name',
     fieldEmail: 'Email',
@@ -302,6 +302,9 @@ const EdizurUI = {
     localStorage.setItem('edizur-theme', this.theme);
     if (this.theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
     else document.documentElement.removeAttribute('data-theme');
+
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute('content', this.theme === 'dark' ? '#121412' : '#EDEBE6');
 
     const toggle = document.getElementById('theme-toggle');
     if (toggle) {
