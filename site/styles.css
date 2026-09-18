@@ -305,6 +305,7 @@ h3 { font-size: 1.35rem; }
 }
 .member h3 { font-size: 1.5rem; }
 .member .role { font-size: .64rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin: .25rem 0 1rem; }
+/* Two columns keep both consultant cards identical even when one email is longer. */
 .member-links {
   display: grid;
   grid-template-columns: auto auto;
@@ -314,11 +315,16 @@ h3 { font-size: 1.35rem; }
   width: 100%;
 }
 .chip {
-  display: inline-flex; align-items: center; gap: .45rem;
+  display: inline-flex; align-items: center; gap: .4rem;
   background: rgba(242, 236, 225, .7); border: 1px solid transparent;
-  padding: .45rem .8rem; border-radius: 2rem; font-size: .78rem; font-weight: 500;
+  padding: .45rem .75rem; border-radius: 2rem; font-weight: 500;
+  font-size: clamp(.68rem, 1.35vw, .78rem);
   white-space: nowrap;
   transition: border-color .2s, color .2s;
+}
+
+@media (max-width: 480px) {
+  .member-links { grid-template-columns: auto; justify-items: center; }
 }
 .chip:hover { border-color: var(--gold); color: var(--gold-dark); }
 .chip .ico { color: var(--gold); }
@@ -347,6 +353,14 @@ h3 { font-size: 1.35rem; }
 .footer-brand strong { font-family: var(--serif); font-size: 2rem; font-weight: 700; letter-spacing: .04em; }
 .footer-brand small { font-size: .62rem; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; color: var(--gold); }
 .footer-tagline { margin: .75rem 0 0; font-size: .82rem; color: rgba(255, 255, 255, .55); font-style: italic; font-family: var(--serif); }
+.footer-social { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-top: 1.25rem; font-size: .8rem; }
+.footer-social a { display: inline-flex; align-items: center; gap: .5rem; color: rgba(255, 255, 255, .72); }
+.footer-social a:hover { color: var(--gold); }
+.footer-social .ico { color: var(--gold); font-size: 1.1rem; }
+.footer-address {
+  font-style: normal; white-space: pre-line;
+  font-size: .84rem; line-height: 1.8; color: rgba(255, 255, 255, .72);
+}
 .footer-contacts { display: flex; flex-direction: column; gap: .5rem; font-size: .84rem; color: rgba(255, 255, 255, .72); }
 .footer-contacts a { display: inline-flex; align-items: center; gap: .55rem; }
 .footer-contacts a:hover { color: var(--gold); }

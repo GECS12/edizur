@@ -5,7 +5,8 @@ const CONFIG = {
   dataset: 'production',
   apiVersion: 'v2026-09-18',
   studioUrl: 'https://edizur.sanity.studio',
-  fallbackEmail: 'geral@edizur.pt',
+  fallbackEmail: 'edizur.imobiliaria@gmail.com',
+  foundedYear: 2025,
 };
 
 const IMAGE_FIELDS = `alt, hotspot, "url": asset->url, "lqip": asset->metadata.lqip`;
@@ -13,6 +14,7 @@ const IMAGE_FIELDS = `alt, hotspot, "url": asset->url, "lqip": asset->metadata.l
 const QUERY = `{
   "settings": *[_id == "siteSettings"][0]{
     heroTitle, heroSubtitle, region, email, phone, sellText, buyText, footerTagline,
+    address, instagram, facebook,
     "heroImage": heroImage{${IMAGE_FIELDS}}
   },
   "agents": *[_type == "agent" && !(_id in path("drafts.**"))] | order(coalesce(sortOrder, 99) asc, name asc){
@@ -109,6 +111,22 @@ function applySettings(settings) {
 
   const email = settings.email || CONFIG.fallbackEmail;
   $('#contact-email').href = `mailto:${email}`;
+  $('#contact-email-text').textContent = email;
+
+  const addressLines = (settings.address || '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  $('#contact-place').textContent = addressLines.length
+    ? addressLines.join(', ')
+    : settings.region || 'Porto e região';
+
+  const footerAddress = $('#footer-address');
+  footerAddress.textContent = addressLines.join('\n');
+  footerAddress.hidden = !addressLines.length;
+
+  renderSocial(settings);
 
   const heroUrl = imageUrl(settings.heroImage, { width: 1100, height: 1300 });
   if (heroUrl) {
@@ -116,6 +134,23 @@ function applySettings(settings) {
     hero.src = heroUrl;
     hero.alt = settings.heroImage.alt || 'Imóveis Edizur';
   }
+}
+
+function renderSocial(settings) {
+  const networks = [
+    { name: 'Instagram', url: settings.instagram, icon: 'instagram' },
+    { name: 'Facebook', url: settings.facebook, icon: 'facebook' },
+  ].filter((network) => network.url);
+
+  const container = $('#footer-social');
+  container.hidden = !networks.length;
+  container.innerHTML = networks
+    .map(
+      (network) =>
+        `<a href="${escapeHtml(network.url)}" target="_blank" rel="noopener"
+            aria-label="${escapeHtml(network.name)}">${icon(network.icon)}<span>${escapeHtml(network.name)}</span></a>`,
+    )
+    .join('');
 }
 
 function propertyCard(property) {
@@ -380,7 +415,9 @@ function bindEvents() {
 /* ---------- boot ---------- */
 
 async function init() {
-  $('#year').textContent = new Date().getFullYear();
+  const year = new Date().getFullYear();
+  $('#year').textContent =
+    year > CONFIG.foundedYear ? `${CONFIG.foundedYear}–${year}` : String(CONFIG.foundedYear);
   $('#admin-link').href = CONFIG.studioUrl;
   bindEvents();
 
