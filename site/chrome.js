@@ -7,12 +7,12 @@
   const current = (href) => {
     const name = href.split('#')[0] || 'index.html';
     if (file === name || (file === 'index.html' && name === 'index.html' && href === 'index.html#inicio' && page === 'home')) {
-      if (name === 'projetos.html' || name === 'contactos.html') {
+      if (name === 'projetos.html' || name === 'sobre.html' || name === 'contactos.html') {
         return ' class="is-current" aria-current="page"';
       }
     }
     if (file === 'projetos.html' && name === 'projetos.html') return ' class="is-current" aria-current="page"';
-    if ((file === 'contactos.html' || page === 'contact') && name === 'contactos.html') {
+    if ((file === 'sobre.html' || file === 'contactos.html' || page === 'about' || page === 'contact') && name === 'sobre.html') {
       return ' class="is-current" aria-current="page"';
     }
     return '';
@@ -20,8 +20,8 @@
 
   const skip = page === 'projects'
     ? { href: '#projetos', key: 'skipProjects', text: 'Saltar para os projetos' }
-    : page === 'contact'
-      ? { href: '#contacto', key: 'skipContact', text: 'Saltar para o formulário' }
+    : page === 'about' || page === 'contact'
+      ? { href: '#quem-somos', key: 'skipAbout', text: 'Saltar para Sobre nós' }
       : { href: '#imoveis', key: 'skipListings', text: 'Saltar para os imóveis' };
 
   const sprite = `
@@ -62,17 +62,19 @@
     </a>
     <nav class="nav" id="nav" aria-label="Navegação principal">
       <a href="index.html#inicio" data-i18n="navHome">Início</a>
-      <a href="projetos.html"${current('projetos.html')} data-i18n="navProjects">Projetos</a>
       <a href="index.html#imoveis" data-i18n="navListings">Imóveis</a>
-      <a href="index.html#sobre" data-i18n="navAbout">Sobre nós</a>
-      <a href="contactos.html"${current('contactos.html')} data-i18n="navContact">Contactos</a>
+      <a href="projetos.html"${current('projetos.html')} data-i18n="navProjects">Projetos</a>
+      <a href="sobre.html"${current('sobre.html')} data-i18n="navAbout">Sobre nós</a>
     </nav>
     <div class="header-tools">
       <div class="lang-switch" role="group" aria-label="Language">
         <button type="button" class="is-active" data-lang="pt" aria-pressed="true">PT</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
       </div>
-      <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" data-i18n-aria="themeToggle" aria-label="Ativar tema escuro">
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false"
+        data-i18n-aria="themeToggle" data-i18n-title="themeHint"
+        aria-label="Alternar tema escuro" title="Alternar tema escuro">
+        <span class="theme-toggle-hint" data-i18n="themeHint" aria-hidden="true">Alternar tema escuro</span>
         <span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb"></span></span>
       </button>
       <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav" data-i18n-aria="openMenu" aria-label="Abrir menu">

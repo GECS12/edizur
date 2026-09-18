@@ -49,8 +49,8 @@ const PROJECTS_QUERY = `"projects": *[_type == "project" && !(_id in path("draft
 
 const QUERY = PAGE === 'projects'
   ? `{${SETTINGS_QUERY}, ${PROJECTS_QUERY}}`
-  : PAGE === 'contact'
-    ? `{${SETTINGS_QUERY}}`
+  : PAGE === 'about' || PAGE === 'contact'
+    ? `{${SETTINGS_QUERY}, ${AGENTS_QUERY}}`
     : `{${SETTINGS_QUERY}, ${AGENTS_QUERY}, ${PROPERTIES_QUERY}}`;
 
 const STATUS_WEIGHT = { disponivel: 0, reservado: 1, vendido: 2 };
@@ -1001,9 +1001,9 @@ function bindEvents() {
   window.addEventListener('edizur:lang', () => {
     applySettings(state.settings);
     if (PAGE === 'projects') renderProjects();
+    else if (PAGE === 'about' || PAGE === 'contact') renderTeam();
     else if (PAGE === 'home') {
       fillListingFilters();
-      renderTeam();
       renderProperties();
     }
   });
@@ -1012,8 +1012,14 @@ function bindEvents() {
 /* ---------- boot ---------- */
 
 async function init() {
-  if (PAGE === 'home' && /^#(equipa|servicos)$/.test(location.hash)) {
-    history.replaceState(null, '', `${location.pathname}#sobre`);
+  if (PAGE === 'home' && /^#(equipa|servicos|sobre)$/.test(location.hash)) {
+    location.replace('sobre.html');
+    return;
+  }
+
+  if (PAGE === 'contact') {
+    location.replace('sobre.html#contacto');
+    return;
   }
 
   if (PAGE === 'home' && /^#projeto-/.test(location.hash)) {
@@ -1040,7 +1046,10 @@ async function init() {
 
     applySettings(state.settings);
 
-    if (PAGE === 'contact') return;
+    if (PAGE === 'about' || PAGE === 'contact') {
+      renderTeam();
+      return;
+    }
 
     if (PAGE === 'projects') {
       renderProjects();
@@ -1050,14 +1059,13 @@ async function init() {
     }
 
     fillListingFilters();
-    renderTeam();
     renderProperties();
 
     const propertyMatch = location.hash.match(/^#imovel-(.+)$/);
     if (propertyMatch) openProperty(propertyMatch[1], { updateHash: false });
   } catch (error) {
     console.error('[edizur] falha ao carregar conteúdo', error);
-    if (PAGE === 'contact') return;
+    if (PAGE === 'about' || PAGE === 'contact') return;
     if (PAGE === 'projects') {
       const grid = $('#projects-grid');
       const empty = $('#projects-empty');

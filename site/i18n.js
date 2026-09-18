@@ -4,7 +4,7 @@ const I18N = {
   pt: {
     skipListings: 'Saltar para os imóveis',
     skipProjects: 'Saltar para os projetos',
-    skipContact: 'Saltar para o formulário',
+    skipAbout: 'Saltar para Sobre nós',
     brandTagline: 'Construção e Imobiliária',
     navHome: 'Início',
     navProjects: 'Projetos',
@@ -12,8 +12,9 @@ const I18N = {
     navAbout: 'Sobre nós',
     navContact: 'Contactos',
     openMenu: 'Abrir menu',
-    themeToggle: 'Ativar tema escuro',
-    themeToggleLight: 'Ativar tema claro',
+    themeToggle: 'Alternar tema escuro',
+    themeToggleLight: 'Alternar tema claro',
+    themeHint: 'Alternar tema escuro',
     heroTitle: 'Construção e imobiliária com rigor.',
     heroSubtitle: 'Obras, reabilitação e imóveis no Porto e região — do primeiro contacto até à entrega.',
     ctaProjects: 'Ver projetos',
@@ -107,7 +108,7 @@ const I18N = {
   en: {
     skipListings: 'Skip to properties',
     skipProjects: 'Skip to projects',
-    skipContact: 'Skip to the form',
+    skipAbout: 'Skip to About us',
     brandTagline: 'Construction & Real Estate',
     navHome: 'Home',
     navProjects: 'Projects',
@@ -115,8 +116,9 @@ const I18N = {
     navAbout: 'About us',
     navContact: 'Contact',
     openMenu: 'Open menu',
-    themeToggle: 'Enable dark theme',
-    themeToggleLight: 'Enable light theme',
+    themeToggle: 'Toggle dark theme',
+    themeToggleLight: 'Toggle light theme',
+    themeHint: 'Toggle dark theme',
     heroTitle: 'Construction and real estate with rigor.',
     heroSubtitle: 'Building, rehabilitation and property across Porto and the region — from first contact to completion.',
     ctaProjects: 'View projects',
@@ -233,6 +235,14 @@ const EdizurUI = {
       if (value) node.setAttribute('placeholder', value);
     });
 
+    root.querySelectorAll('[data-i18n-title]').forEach((node) => {
+      const value = this.t(node.dataset.i18nTitle);
+      if (value) {
+        node.setAttribute('title', value);
+        node.setAttribute('data-tooltip', value);
+      }
+    });
+
     root.querySelectorAll('[data-i18n-aria]').forEach((node) => {
       const key = node.dataset.i18nAria;
       const dark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -274,11 +284,12 @@ const EdizurUI = {
 
     const toggle = document.getElementById('theme-toggle');
     if (toggle) {
+      const label = this.t(this.theme === 'dark' ? 'themeToggleLight' : 'themeToggle');
+      const hint = this.t('themeHint');
       toggle.setAttribute('aria-pressed', String(this.theme === 'dark'));
-      toggle.setAttribute(
-        'aria-label',
-        this.t(this.theme === 'dark' ? 'themeToggleLight' : 'themeToggle'),
-      );
+      toggle.setAttribute('aria-label', label);
+      toggle.setAttribute('title', hint);
+      toggle.setAttribute('data-tooltip', hint);
     }
   },
 
