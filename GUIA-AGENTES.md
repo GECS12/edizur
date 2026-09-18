@@ -26,7 +26,7 @@ Do lado esquerdo tem:
 | **Em destaque** | Os que aparecem primeiro no site |
 | **Todos os imóveis** | Lista completa |
 | **Consultores** | As suas fotografias e contactos |
-| **Definições do Site** | Textos e imagem da página inicial |
+| **Definições do Site** | Textos e imagem da página inicial, contactos e redes sociais |
 
 ## 3. Adicionar um imóvel
 
@@ -87,8 +87,20 @@ depois de a carregar e arraste o círculo do ponto focal.
 
 ## 8. Mudar os textos da página inicial
 
-**Definições do Site** → altere o título, o subtítulo, a imagem principal ou os
-textos de *Vender* e *Comprar* → **Publish**.
+**Definições do Site** → separador **Página inicial** → altere o título, o
+subtítulo, a imagem principal ou os textos de *Vender* e *Comprar* → **Publish**.
+
+## 9. Mudar contactos, morada e redes sociais
+
+**Definições do Site** → separador **Contactos** → **Publish**.
+
+Aqui ficam o e-mail geral, o telefone geral, a morada, a zona de atuação, os
+endereços do Instagram e do Facebook, e a frase do rodapé.
+
+- A **morada** tem duas linhas: rua e número na primeira, código postal e cidade
+  na segunda.
+- Os endereços do **Instagram** e do **Facebook** têm de começar por `https://`.
+  Se deixar um deles vazio, esse ícone desaparece do site.
 
 ## Perguntas frequentes
 

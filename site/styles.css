@@ -305,26 +305,26 @@ h3 { font-size: 1.35rem; }
 }
 .member h3 { font-size: 1.5rem; }
 .member .role { font-size: .64rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin: .25rem 0 1rem; }
-/* Two columns keep both consultant cards identical even when one email is longer. */
+/* Keep both contacts on one row on desktop/tablet. */
 .member-links {
-  display: grid;
-  grid-template-columns: auto auto;
+  display: flex;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
   gap: .5rem;
   width: 100%;
 }
 .chip {
-  display: inline-flex; align-items: center; gap: .4rem;
+  display: inline-flex; align-items: center; gap: .35rem;
   background: rgba(242, 236, 225, .7); border: 1px solid transparent;
-  padding: .45rem .75rem; border-radius: 2rem; font-weight: 500;
-  font-size: clamp(.68rem, 1.35vw, .78rem);
+  padding: .45rem .65rem; border-radius: 2rem; font-weight: 500;
+  font-size: clamp(.66rem, 1.25vw, .76rem);
   white-space: nowrap;
   transition: border-color .2s, color .2s;
 }
 
 @media (max-width: 480px) {
-  .member-links { grid-template-columns: auto; justify-items: center; }
+  .member-links { flex-direction: column; }
 }
 .chip:hover { border-color: var(--gold); color: var(--gold-dark); }
 .chip .ico { color: var(--gold); }
@@ -361,11 +361,6 @@ h3 { font-size: 1.35rem; }
   font-style: normal; white-space: pre-line;
   font-size: .84rem; line-height: 1.8; color: rgba(255, 255, 255, .72);
 }
-.footer-contacts { display: flex; flex-direction: column; gap: .5rem; font-size: .84rem; color: rgba(255, 255, 255, .72); }
-.footer-contacts a { display: inline-flex; align-items: center; gap: .55rem; }
-.footer-contacts a:hover { color: var(--gold); }
-.footer-contacts .ico { color: var(--gold); }
-
 .footer-bottom {
   padding-top: 1.75rem; display: flex; flex-wrap: wrap; gap: 1rem;
   align-items: center; justify-content: space-between;

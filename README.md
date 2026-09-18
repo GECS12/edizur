@@ -52,8 +52,10 @@ python3 -m http.server 4173
 ```
 
 O domínio tem de estar autorizado em CORS no Sanity, senão o pedido é bloqueado
-pelo browser. Já estão autorizados: `http://localhost:4173`, `http://localhost:8080`
-e `https://*.netlify.app`.
+pelo browser. Já estão autorizados: `http://localhost:4173`, `http://127.0.0.1:4173`,
+`http://localhost:8080` e `https://*.netlify.app`. O endereço na barra do browser
+tem de corresponder exatamente a um destes — abrir o `index.html` com duplo clique
+(`file://`) nunca funciona.
 
 **Studio:**
 
@@ -133,8 +135,8 @@ galeria de fotografias (a primeira é a capa, arrastáveis para reordenar).
 **Consultor** — nome, função, telefone, e-mail, fotografia, ordem na página.
 
 **Definições do Site** — documento único com título e subtítulo da página inicial,
-imagem principal, textos dos serviços Vender/Comprar, zona de atuação, e-mail geral
-e frase do rodapé.
+imagem principal, textos dos serviços Vender/Comprar, zona de atuação, e-mail e
+telefone gerais, morada, Instagram, Facebook e frase do rodapé.
 
 A distinção `venda` / `procura` é o que alimenta os filtros *Para venda* e
 *Procuras* no site: "procura" serve para publicar o que um cliente comprador anda

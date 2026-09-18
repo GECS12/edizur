@@ -203,11 +203,9 @@ function renderProperties() {
 
 function renderTeam() {
   const container = $('#team');
-  const footer = $('#footer-contacts');
 
   if (!state.agents.length) {
     container.closest('section').hidden = true;
-    footer.innerHTML = '';
     return;
   }
 
@@ -237,14 +235,6 @@ function renderTeam() {
           </div>
         </article>`;
     })
-    .join('');
-
-  footer.innerHTML = state.agents
-    .filter((agent) => agent.phone)
-    .map(
-      (agent) =>
-        `<a href="tel:${escapeHtml(agent.phone.replace(/\s/g, ''))}">${icon('phone')}${escapeHtml(agent.name)}: ${escapeHtml(agent.phone)}</a>`,
-    )
     .join('');
 }
 
