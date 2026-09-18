@@ -110,17 +110,13 @@ function applySettings(settings) {
   }
 
   const email = settings.email || CONFIG.fallbackEmail;
-  $('#contact-email').href = `mailto:${email}`;
-  $('#contact-email-text').textContent = email;
+  $('#footer-email').href = `mailto:${email}`;
+  $('#footer-email-text').textContent = email;
 
   const addressLines = (settings.address || '')
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
-
-  $('#contact-place').textContent = addressLines.length
-    ? addressLines.join(', ')
-    : settings.region || 'Porto e região';
 
   const footerAddress = $('#footer-address');
   footerAddress.textContent = addressLines.join('\n');

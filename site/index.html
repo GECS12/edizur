@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
 <link rel="preconnect" href="https://cdn.sanity.io">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260918-2">
+<link rel="stylesheet" href="styles.css?v=20260918-3">
 </head>
 <body>
 
@@ -165,21 +165,9 @@
     </div>
   </section>
 
-  <section class="contact" id="contactos">
-    <div class="wrap contact-band">
-      <div>
-        <h2>Fale connosco, sem compromisso.</h2>
-        <p>Estamos prontos para ajudar na sua decisão.</p>
-      </div>
-      <div class="contact-links">
-        <a id="contact-email" href="mailto:edizur.imobiliaria@gmail.com"><svg class="ico"><use href="#i-mail"></use></svg><span id="contact-email-text">edizur.imobiliaria@gmail.com</span></a>
-        <span class="contact-region"><svg class="ico"><use href="#i-pin"></use></svg><span id="contact-place">Av. da Boavista 918, 4100-112 - Porto - Portugal</span></span>
-      </div>
-    </div>
-  </section>
 </main>
 
-<footer class="site-footer">
+<footer class="site-footer" id="contactos">
   <div class="wrap footer-top">
     <div class="footer-brand">
       <strong>edizur</strong>
@@ -187,7 +175,13 @@
       <p class="footer-tagline" data-content="footerTagline">O seu imóvel, o nosso compromisso.</p>
       <div class="footer-social" id="footer-social" hidden></div>
     </div>
-    <address class="footer-address" id="footer-address" hidden></address>
+    <div class="footer-office">
+      <a class="footer-email" id="footer-email" href="mailto:edizur.imobiliaria@gmail.com">
+        <svg class="ico"><use href="#i-mail"></use></svg>
+        <span id="footer-email-text">edizur.imobiliaria@gmail.com</span>
+      </a>
+      <address class="footer-address" id="footer-address" hidden></address>
+    </div>
   </div>
   <div class="wrap footer-bottom">
     <p>&copy; <span id="year"></span> Edizur — Todos os direitos reservados.</p>
@@ -207,6 +201,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20260918-2"></script>
+<script src="app.js?v=20260918-3"></script>
 </body>
 </html>

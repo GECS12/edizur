@@ -329,22 +329,6 @@ h3 { font-size: 1.35rem; }
 .chip:hover { border-color: var(--gold); color: var(--gold-dark); }
 .chip .ico { color: var(--gold); }
 
-/* ---------- contact ---------- */
-
-.contact { padding: clamp(3rem, 6vw, 4.5rem) 0; }
-.contact-band {
-  background: var(--cream); border: 1px solid var(--line); box-shadow: var(--shadow-sm);
-  padding: clamp(1.75rem, 3vw, 2.5rem);
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem;
-}
-.contact-band h2 { font-size: clamp(1.4rem, 2.4vw, 1.8rem); }
-.contact-band p { margin: .35rem 0 0; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--slate); }
-.contact-links { display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem; font-size: .9rem; }
-.contact-links a, .contact-region { display: inline-flex; align-items: center; gap: .5rem; }
-.contact-links .ico { color: var(--gold); }
-.contact-links a:hover { color: var(--gold); }
-.contact-region { color: var(--slate); }
-
 /* ---------- footer ---------- */
 
 .site-footer { margin-top: auto; background: var(--dark); color: #fff; padding: clamp(3rem, 6vw, 4rem) 0 2rem; }
@@ -357,6 +341,13 @@ h3 { font-size: 1.35rem; }
 .footer-social a { display: inline-flex; align-items: center; gap: .5rem; color: rgba(255, 255, 255, .72); }
 .footer-social a:hover { color: var(--gold); }
 .footer-social .ico { color: var(--gold); font-size: 1.1rem; }
+.footer-office { display: flex; flex-direction: column; gap: .65rem; }
+.footer-email {
+  display: inline-flex; align-items: center; gap: .55rem;
+  font-size: .84rem; color: rgba(255, 255, 255, .72);
+}
+.footer-email:hover { color: var(--gold); }
+.footer-email .ico { color: var(--gold); }
 .footer-address {
   font-style: normal; white-space: pre-line;
   font-size: .84rem; line-height: 1.8; color: rgba(255, 255, 255, .72);
