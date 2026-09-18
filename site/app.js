@@ -495,7 +495,11 @@ function detailMarkup(property) {
 
 function projectDetailMarkup(project) {
   const email = state.settings?.email || CONFIG.fallbackEmail;
-  const phone = (state.settings?.phone || '').replace(/\D/g, '');
+  const phone = (
+    state.settings?.phone ||
+    state.agents.find((agent) => agent.phone)?.phone ||
+    ''
+  ).replace(/\D/g, '');
   const projectUrl = new URL(location.href);
   projectUrl.search = '';
   projectUrl.hash = `projeto-${project._id}`;
