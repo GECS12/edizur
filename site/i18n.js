@@ -2,6 +2,8 @@
 
 const I18N = {
   pt: {
+    skipListings: 'Saltar para os imóveis',
+    skipProjects: 'Saltar para os projetos',
     brandTagline: 'Construção e Imobiliária',
     navHome: 'Início',
     navProjects: 'Projetos',
@@ -91,6 +93,8 @@ const I18N = {
     featured: 'Destaque',
   },
   en: {
+    skipListings: 'Skip to properties',
+    skipProjects: 'Skip to projects',
     brandTagline: 'Construction & Real Estate',
     navHome: 'Home',
     navProjects: 'Projects',

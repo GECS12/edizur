@@ -15,31 +15,38 @@ const CONFIG = {
 
 const IMAGE_FIELDS = `alt, hotspot, "url": asset->url, "lqip": asset->metadata.lqip`;
 
-const QUERY = `{
-  "settings": *[_id == "siteSettings"][0]{
-    heroTitle, heroSubtitle, region, email, phone, sellText, buyText, footerTagline,
-    address, instagram, facebook,
-    "heroImage": heroImage{${IMAGE_FIELDS}}
-  },
-  "agents": *[_type == "agent" && !(_id in path("drafts.**"))] | order(coalesce(sortOrder, 99) asc, name asc){
-    _id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}
-  },
-  "properties": *[_type == "property" && !(_id in path("drafts.**"))]
-    | order(coalesce(featured, false) desc, coalesce(publishedAt, _createdAt) desc){
-      _id, title, listingType, status, price, priceOnRequest, location, typology,
-      area, areaUtil, areaBruta, areaTerreno, areaGaragem,
-      bedrooms, suites, bathrooms, parkingSpaces, floor, yearBuilt, condoFee,
-      energyRating, description, features, reference, featured,
-      mapLocation,
-      "images": images[]{_key, ${IMAGE_FIELDS}},
-      "agent": agent->{_id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}}
-  },
-  "projects": *[_type == "project" && !(_id in path("drafts.**"))]
-    | order(coalesce(sortOrder, 99) asc, coalesce(publishedAt, _createdAt) desc){
-      _id, title, subtitle, location, summary, description, sortOrder,
-      "images": images[]{_key, ${IMAGE_FIELDS}}
-  }
+const PAGE = document.body?.dataset?.page || 'home';
+
+const SETTINGS_QUERY = `"settings": *[_id == "siteSettings"][0]{
+  heroTitle, heroSubtitle, region, email, phone, sellText, buyText, footerTagline,
+  address, instagram, facebook,
+  "heroImage": heroImage{${IMAGE_FIELDS}}
 }`;
+
+const AGENTS_QUERY = `"agents": *[_type == "agent" && !(_id in path("drafts.**"))] | order(coalesce(sortOrder, 99) asc, name asc){
+  _id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}
+}`;
+
+const PROPERTIES_QUERY = `"properties": *[_type == "property" && !(_id in path("drafts.**"))]
+  | order(coalesce(featured, false) desc, coalesce(publishedAt, _createdAt) desc){
+    _id, title, listingType, status, price, priceOnRequest, location, typology,
+    area, areaUtil, areaBruta, areaTerreno, areaGaragem,
+    bedrooms, suites, bathrooms, parkingSpaces, floor, yearBuilt, condoFee,
+    energyRating, description, features, reference, featured,
+    mapLocation,
+    "images": images[]{_key, ${IMAGE_FIELDS}},
+    "agent": agent->{_id, name, role, phone, email, "photo": photo{${IMAGE_FIELDS}}}
+}`;
+
+const PROJECTS_QUERY = `"projects": *[_type == "project" && !(_id in path("drafts.**"))]
+  | order(coalesce(sortOrder, 99) asc, coalesce(publishedAt, _createdAt) desc){
+    _id, title, subtitle, location, summary, description, sortOrder,
+    "images": images[]{_key, ${IMAGE_FIELDS}}
+}`;
+
+const QUERY = PAGE === 'projects'
+  ? `{${SETTINGS_QUERY}, ${PROJECTS_QUERY}}`
+  : `{${SETTINGS_QUERY}, ${AGENTS_QUERY}, ${PROPERTIES_QUERY}}`;
 
 const STATUS_WEIGHT = { disponivel: 0, reservado: 1, vendido: 2 };
 
@@ -271,7 +278,7 @@ function applySettings(settings) {
   renderSocial(settings);
   renderWhatsAppFloat();
 
-  const projectCover = state.projects[0]?.images?.[0];
+  const projectCover = null;
   const heroSource = settings.heroImage || projectCover;
   const heroUrl = imageUrl(heroSource, { width: 2000, height: 1400 });
   const hero = $('#hero-image');
@@ -738,7 +745,10 @@ function openProject(id, { updateHash = true } = {}) {
   state.gallery = 0;
   $('.modal-close').focus();
 
-  if (updateHash) history.replaceState(null, '', `#projeto-${id}`);
+  if (updateHash) {
+    const base = PAGE === 'projects' ? '' : 'projetos.html';
+    history.replaceState(null, '', `${base}#projeto-${id}`);
+  }
 }
 
 function closeModal() {
@@ -828,41 +838,70 @@ function bindEvents() {
 
   window.addEventListener('edizur:lang', () => {
     applySettings(state.settings);
-    renderProjects();
-    renderTeam();
-    renderProperties();
+    if (PAGE === 'projects') renderProjects();
+    else {
+      renderTeam();
+      renderProperties();
+    }
   });
 }
 
 /* ---------- boot ---------- */
 
 async function init() {
+  // Old deep links on the homepage should open the projects page.
+  if (PAGE === 'home' && /^#projeto-/.test(location.hash)) {
+    location.replace(`projetos.html${location.hash}`);
+    return;
+  }
+
   const year = new Date().getFullYear();
-  $('#year').textContent =
-    year > CONFIG.foundedYear ? `${CONFIG.foundedYear}–${year}` : String(CONFIG.foundedYear);
+  const yearNode = $('#year');
+  if (yearNode) {
+    yearNode.textContent =
+      year > CONFIG.foundedYear ? `${CONFIG.foundedYear}–${year}` : String(CONFIG.foundedYear);
+  }
   bindEvents();
   bindHeaderScroll();
   observeReveals();
 
   try {
-    const { settings, agents, properties, projects } = await loadContent();
-    state.settings = settings || null;
-    state.agents = agents || [];
-    state.properties = properties || [];
-    state.projects = projects || [];
+    const result = await loadContent();
+    state.settings = result.settings || null;
+    state.agents = result.agents || [];
+    state.properties = result.properties || [];
+    state.projects = result.projects || [];
 
     applySettings(state.settings);
-    renderProjects();
+
+    if (PAGE === 'projects') {
+      renderProjects();
+      const projectMatch = location.hash.match(/^#projeto-(.+)$/);
+      if (projectMatch) openProject(projectMatch[1], { updateHash: false });
+      return;
+    }
+
     renderTeam();
     renderProperties();
 
     const propertyMatch = location.hash.match(/^#imovel-(.+)$/);
     if (propertyMatch) openProperty(propertyMatch[1], { updateHash: false });
-
-    const projectMatch = location.hash.match(/^#projeto-(.+)$/);
-    if (projectMatch) openProject(projectMatch[1], { updateHash: false });
   } catch (error) {
     console.error('[edizur] falha ao carregar conteúdo', error);
+    if (PAGE === 'projects') {
+      const grid = $('#projects-grid');
+      const empty = $('#projects-empty');
+      if (grid) {
+        grid.innerHTML = '';
+        grid.removeAttribute('aria-busy');
+      }
+      if (empty) {
+        empty.textContent = t('loadFail');
+        empty.hidden = false;
+      }
+      return;
+    }
+
     $('#grid').innerHTML = '';
     $('#grid').removeAttribute('aria-busy');
     const empty = $('#empty');

@@ -39,3 +39,13 @@
   to = "https://edizur.sanity.studio"
   status = 302
   force = true
+
+[[redirects]]
+  from = "/projetos"
+  to = "/projetos.html"
+  status = 301
+
+[[redirects]]
+  from = "/contactos"
+  to = "/contactos.html"
+  status = 301
