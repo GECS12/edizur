@@ -3,26 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Edizur — Construção e Imobiliária | Compramos e Vendemos Imóveis no Porto</title>
-<meta name="description" content="Edizur — Construção e Imobiliária. Compramos e vendemos imóveis no Porto e região. Do primeiro contacto até à escritura, estamos ao seu lado.">
+<title>Edizur — Construção e Imobiliária | Porto</title>
+<meta name="description" content="Edizur — construção, reabilitação e imobiliária no Porto e região. Do primeiro contacto até à escritura, estamos ao seu lado.">
 <link rel="canonical" href="https://edizur.pt/">
 
 <meta property="og:type" content="website">
 <meta property="og:locale" content="pt_PT">
 <meta property="og:site_name" content="Edizur">
-<meta property="og:title" content="Edizur — Compramos e Vendemos Imóveis">
-<meta property="og:description" content="Avaliação, divulgação e acompanhamento. O seu imóvel, o nosso compromisso.">
-<meta name="theme-color" content="#FBF9F5">
+<meta property="og:title" content="Edizur — Construção e Imobiliária">
+<meta property="og:description" content="Obras com rigor e imóveis com acompanhamento. Porto e região.">
+<meta property="og:image" content="https://cdn.sanity.io/images/a5nclqso/production/b2ef405180bb100562d7fcd564c7faa8afef99d5-1800x1200.jpg?w=1200&h=630&fit=crop&auto=format">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#EDEBE6">
 
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" as="image" href="hero.jpg" fetchpriority="high">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://a5nclqso.apicdn.sanity.io" crossorigin>
 <link rel="preconnect" href="https://cdn.sanity.io">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin>
-<link rel="stylesheet" href="styles.css?v=20260918-10">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=20260918-12">
+<script>
+  (() => {
+    const theme = localStorage.getItem('edizur-theme');
+    const lang = localStorage.getItem('edizur-lang') || 'pt';
+    if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.setAttribute('lang', lang === 'en' ? 'en' : 'pt-PT');
+    document.documentElement.setAttribute('data-lang', lang);
+  })();
+</script>
 </head>
 <body>
 
@@ -48,87 +58,98 @@
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx=".5"/><rect x="14" y="3.5" width="6.5" height="6.5" rx=".5"/><rect x="3.5" y="14" width="6.5" height="6.5" rx=".5"/><rect x="14" y="14" width="6.5" height="6.5" rx=".5"/></symbol>
 </svg>
 
-<a class="skip-link" href="#imoveis">Saltar para os imóveis</a>
+<a class="skip-link" href="#projetos">Saltar para os projetos</a>
 
 <header class="site-header" id="header">
   <div class="wrap header-inner">
-    <a class="brand" href="#inicio" aria-label="Edizur — página inicial">
+    <a class="brand" href="index.html#inicio" aria-label="Edizur — página inicial">
       <span class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 100 100"><path d="M18 82V44l16 10 16-22 16 22 16-10v38Z"/><path d="M26 39V26h10v13M45 26V14h10v12M64 39V26h10v13"/></svg>
       </span>
       <span class="brand-text">
         <strong>edizur</strong>
-        <small>Construção e Imobiliária</small>
+        <small data-i18n="brandTagline">Construção e Imobiliária</small>
       </span>
     </a>
 
     <nav class="nav" id="nav" aria-label="Navegação principal">
-      <a href="#inicio">Início</a>
-      <a href="#imoveis">Imóveis</a>
-      <a href="#projetos">Projetos</a>
-      <a href="#servicos">Serviços</a>
-      <a href="#equipa">Equipa</a>
-      <a href="#contactos">Contactos</a>
+      <a href="index.html#inicio" data-i18n="navHome">Início</a>
+      <a href="index.html#projetos" data-i18n="navProjects">Projetos</a>
+      <a href="index.html#imoveis" data-i18n="navListings">Imóveis</a>
+      <a href="index.html#servicos" data-i18n="navServices">Serviços</a>
+      <a href="index.html#equipa" data-i18n="navTeam">Equipa</a>
+      <a href="contactos.html" data-i18n="navContact">Contactos</a>
     </nav>
 
-    <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav" aria-label="Abrir menu">
-      <svg class="ico"><use href="#i-menu"></use></svg>
-    </button>
+    <div class="header-tools">
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" class="is-active" data-lang="pt" aria-pressed="true">PT</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false" data-i18n-aria="themeToggle" aria-label="Ativar tema escuro">
+        <span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb"></span></span>
+      </button>
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav" data-i18n-aria="openMenu" aria-label="Abrir menu">
+        <svg class="ico"><use href="#i-menu"></use></svg>
+      </button>
+    </div>
   </div>
 </header>
 
 <main>
   <section class="hero" id="inicio">
-    <div class="wrap hero-grid">
-      <div class="hero-copy">
-        <p class="eyebrow"><span class="dot" aria-hidden="true"></span><span data-content="region">Porto e Região</span></p>
-        <h1 data-content="heroTitle">Compramos e <em>Vendemos</em> Imóveis.</h1>
-        <p class="lead" data-content="heroSubtitle">Do primeiro contacto até à escritura, estamos ao seu lado.</p>
+    <div class="hero-plane" aria-hidden="true">
+      <img id="hero-image" src="hero.jpg" alt="" width="1800" height="1200" fetchpriority="high" decoding="async">
+    </div>
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="wrap hero-copy">
+      <p class="hero-brand">edizur</p>
+      <h1 data-content="heroTitle" data-i18n-fallback="heroTitle">Construção e imobiliária com rigor.</h1>
+      <p class="lead" data-content="heroSubtitle" data-i18n-fallback="heroSubtitle">Obras, reabilitação e imóveis no Porto e região — do primeiro contacto até à entrega.</p>
+      <div class="actions">
+        <a class="btn btn-light" href="#projetos" data-i18n="ctaProjects">Ver projetos</a>
+        <a class="btn btn-ghost-light" href="contactos.html" data-i18n="ctaContact">Fale connosco</a>
+      </div>
+    </div>
+  </section>
 
-        <ul class="pill-list">
-          <li><svg class="ico"><use href="#i-check"></use></svg>Avaliação</li>
-          <li><svg class="ico"><use href="#i-check"></use></svg>Divulgação</li>
-          <li><svg class="ico"><use href="#i-check"></use></svg>Acompanhamento</li>
-        </ul>
-
-        <p class="hero-quote">O seu imóvel, o nosso compromisso.</p>
-
-        <div class="actions">
-          <a class="btn btn-dark" href="#imoveis">Ver imóveis disponíveis</a>
-          <a class="btn btn-ghost" href="#contactos">Fale connosco</a>
+  <section class="projects" id="projetos">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow" data-i18n="projectsEyebrow">Portfólio</p>
+          <h2 data-i18n="projectsTitle">Projetos desenvolvidos</h2>
+          <p class="section-lead left" data-i18n="projectsLead">
+            Construção, remodelação e reabilitação — obras que reflectem rigor e experiência.
+          </p>
         </div>
       </div>
-
-      <figure class="hero-figure">
-        <div class="hero-media">
-          <img id="hero-image" src="hero.jpg" alt="Imóveis no Porto" width="1200" height="1400" fetchpriority="high">
-          <figcaption>
-            <span class="caption-eyebrow">Mais do que imóveis</span>
-            <span class="caption-title">Pessoas e projetos.</span>
-          </figcaption>
-        </div>
-      </figure>
+      <div class="project-stack" id="projects-grid" aria-busy="true">
+        <div class="project-row skeleton" aria-hidden="true"></div>
+        <div class="project-row skeleton" aria-hidden="true"></div>
+      </div>
+      <p class="empty" id="projects-empty" hidden>Ainda não existem projetos publicados.</p>
     </div>
   </section>
 
   <section class="services" id="servicos">
     <div class="wrap">
-      <div class="section-head center">
-        <p class="eyebrow">Serviços personalizados</p>
-        <h2>Vender ou comprar,<br>começa por uma conversa.</h2>
+      <div class="section-head center reveal">
+        <p class="eyebrow" data-i18n="servicesEyebrow">Serviços personalizados</p>
+        <h2 data-i18n-html="servicesTitle">Vender ou comprar,<br>começa por uma conversa.</h2>
         <span class="rule" aria-hidden="true"></span>
       </div>
 
       <div class="cards-2">
-        <article class="service-card">
+        <article class="service-card reveal">
           <span class="service-icon" aria-hidden="true"><svg class="ico"><use href="#i-house"></use></svg></span>
-          <h3>Vender</h3>
-          <p data-content="sellText">Valorizamos o seu imóvel, divulgamo-lo com eficácia e acompanhamos todo o processo até à escritura.</p>
+          <h3 data-i18n="sellLabel">Vender</h3>
+          <p data-content="sellText" data-i18n-fallback="sellText">Valorizamos o seu imóvel, divulgamo-lo com eficácia e acompanhamos todo o processo até à escritura.</p>
         </article>
-        <article class="service-card">
+        <article class="service-card reveal">
           <span class="service-icon" aria-hidden="true"><svg class="ico"><use href="#i-key"></use></svg></span>
-          <h3>Comprar</h3>
-          <p data-content="buyText">Diga-nos o que procura. Ajudamo-lo a encontrar o imóvel certo e acompanhamos o processo de compra.</p>
+          <h3 data-i18n="buyLabel">Comprar</h3>
+          <p data-content="buyText" data-i18n-fallback="buyText">Diga-nos o que procura. Ajudamo-lo a encontrar o imóvel certo e acompanhamos o processo de compra.</p>
         </article>
       </div>
     </div>
@@ -136,23 +157,23 @@
 
   <section class="listings" id="imoveis">
     <div class="wrap">
-      <div class="section-head split">
+      <div class="section-head split reveal">
         <div>
-          <p class="eyebrow">Catálogo</p>
-          <h2>Imóveis em destaque</h2>
+          <p class="eyebrow" data-i18n="listingsEyebrow">Catálogo</p>
+          <h2 data-i18n="listingsTitle">Imóveis em destaque</h2>
         </div>
         <div class="catalog-controls">
-          <div class="filters" id="filters" role="tablist" aria-label="Filtrar imóveis">
-            <button role="tab" class="is-active" data-filter="all" aria-selected="true">Todos</button>
-            <button role="tab" data-filter="venda" aria-selected="false">Para venda</button>
-            <button role="tab" data-filter="procura" aria-selected="false">Procuras</button>
+          <div class="filters" id="filters" role="tablist" data-i18n-aria="filterListings" aria-label="Filtrar imóveis">
+            <button role="tab" class="is-active" data-filter="all" aria-selected="true" data-i18n="filterAll">Todos</button>
+            <button role="tab" data-filter="venda" aria-selected="false" data-i18n="filterSale">Para venda</button>
+            <button role="tab" data-filter="procura" aria-selected="false" data-i18n="filterWanted">Procuras</button>
           </div>
-          <div class="view-switch" id="view-switch" aria-label="Modo de visualização">
+          <div class="view-switch" id="view-switch" data-i18n-aria="viewMode" aria-label="Modo de visualização">
             <button type="button" class="is-active" data-view="grid" aria-pressed="true">
-              <svg class="ico"><use href="#i-grid"></use></svg>Lista
+              <svg class="ico"><use href="#i-grid"></use></svg><span data-i18n="viewList">Lista</span>
             </button>
             <button type="button" data-view="map" aria-pressed="false">
-              <svg class="ico"><use href="#i-pin"></use></svg>Mapa
+              <svg class="ico"><use href="#i-pin"></use></svg><span data-i18n="viewMap">Mapa</span>
             </button>
           </div>
         </div>
@@ -174,30 +195,11 @@
     </div>
   </section>
 
-  <section class="projects" id="projetos">
-    <div class="wrap">
-      <div class="section-head center">
-        <p class="eyebrow">Portfólio</p>
-        <h2>Projetos desenvolvidos</h2>
-        <p class="section-lead">
-          Construção, remodelação e reabilitação — obras que reflectem rigor, qualidade e experiência.
-        </p>
-        <span class="rule" aria-hidden="true"></span>
-      </div>
-      <div class="grid" id="projects-grid" aria-busy="true">
-        <div class="card skeleton" aria-hidden="true"></div>
-        <div class="card skeleton" aria-hidden="true"></div>
-        <div class="card skeleton" aria-hidden="true"></div>
-      </div>
-      <p class="empty" id="projects-empty" hidden>Ainda não existem projetos publicados.</p>
-    </div>
-  </section>
-
   <section class="team" id="equipa">
     <div class="wrap">
-      <div class="section-head center">
-        <p class="eyebrow">Confiança, resultados, proximidade</p>
-        <h2>A nossa equipa</h2>
+      <div class="section-head center reveal">
+        <p class="eyebrow" data-i18n="teamEyebrow">Confiança, resultados, proximidade</p>
+        <h2 data-i18n="teamTitle">A nossa equipa</h2>
         <span class="rule" aria-hidden="true"></span>
       </div>
       <div class="cards-2 team-grid" id="team"></div>
@@ -210,8 +212,8 @@
   <div class="wrap footer-top">
     <div class="footer-brand">
       <strong>edizur</strong>
-      <small>Construção e Imobiliária</small>
-      <p class="footer-tagline" data-content="footerTagline">O seu imóvel, o nosso compromisso.</p>
+      <small data-i18n="brandTagline">Construção e Imobiliária</small>
+      <p class="footer-tagline" data-content="footerTagline" data-i18n-fallback="footerTagline">O seu imóvel, o nosso compromisso.</p>
       <div class="footer-social" id="footer-social" hidden></div>
     </div>
     <div class="footer-office">
@@ -219,13 +221,23 @@
         <svg class="ico"><use href="#i-mail"></use></svg>
         <span id="footer-email-text">edizur.imobiliaria@gmail.com</span>
       </a>
+      <a class="footer-phone" id="footer-phone" href="tel:+351965466225" hidden>
+        <svg class="ico"><use href="#i-phone"></use></svg>
+        <span id="footer-phone-text"></span>
+      </a>
       <address class="footer-address" id="footer-address" hidden></address>
     </div>
   </div>
   <div class="wrap footer-bottom">
-    <p>&copy; <span id="year"></span> Edizur — Todos os direitos reservados.</p>
+    <p>&copy; <span id="year"></span> Edizur — <span data-i18n="rights">Todos os direitos reservados</span>.</p>
   </div>
 </footer>
+
+<a class="wa-float" id="wa-float" href="#" target="_blank" rel="noopener" hidden
+   aria-label="Contactar por WhatsApp">
+  <svg class="ico"><use href="#i-message"></use></svg>
+  <span>WhatsApp</span>
+</a>
 
 <div class="modal" id="modal" hidden>
   <div class="modal-backdrop" data-close></div>
@@ -237,8 +249,7 @@
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin></script>
-<script src="app.js?v=20260918-9"></script>
+<script src="i18n.js?v=20260918-12"></script>
+<script src="app.js?v=20260918-12"></script>
 </body>
 </html>

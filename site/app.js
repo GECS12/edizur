@@ -5,7 +5,12 @@ const CONFIG = {
   dataset: 'production',
   apiVersion: 'v2026-09-18',
   fallbackEmail: 'edizur.imobiliaria@gmail.com',
+  fallbackPhone: '+351 965 466 225',
   foundedYear: 2025,
+  leafletCss: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  leafletCssIntegrity: 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=',
+  leafletJs: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+  leafletJsIntegrity: 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=',
 };
 
 const IMAGE_FIELDS = `alt, hotspot, "url": asset->url, "lqip": asset->metadata.lqip`;
@@ -34,7 +39,6 @@ const QUERY = `{
   }
 }`;
 
-const STATUS_LABELS = { disponivel: '', reservado: 'Reservado', vendido: 'Vendido' };
 const STATUS_WEIGHT = { disponivel: 0, reservado: 1, vendido: 2 };
 
 const euro = new Intl.NumberFormat('pt-PT', {
@@ -42,6 +46,14 @@ const euro = new Intl.NumberFormat('pt-PT', {
   currency: 'EUR',
   maximumFractionDigits: 0,
 });
+
+const t = (key) => (window.EdizurUI ? EdizurUI.t(key) : key);
+
+function statusLabel(status) {
+  if (status === 'reservado') return t('reserved');
+  if (status === 'vendido') return t('sold');
+  return '';
+}
 
 const state = {
   properties: [],
@@ -54,6 +66,7 @@ const state = {
   modalKind: null,
   map: null,
   mapMarkers: null,
+  leafletPromise: null,
 };
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -65,6 +78,16 @@ const escapeHtml = (value) =>
   })[ch]);
 
 const icon = (name) => `<svg class="ico" aria-hidden="true"><use href="#i-${name}"></use></svg>`;
+
+const digits = (value) => String(value || '').replace(/\D/g, '');
+
+function contactPhone() {
+  return (
+    state.settings?.phone ||
+    state.agents.find((agent) => agent.phone)?.phone ||
+    CONFIG.fallbackPhone
+  );
+}
 
 /* ---------- data ---------- */
 
@@ -95,15 +118,39 @@ async function loadContent() {
   return result ?? {};
 }
 
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (state.leafletPromise) return state.leafletPromise;
+
+  state.leafletPromise = new Promise((resolve, reject) => {
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = CONFIG.leafletCss;
+    css.integrity = CONFIG.leafletCssIntegrity;
+    css.crossOrigin = '';
+    document.head.appendChild(css);
+
+    const script = document.createElement('script');
+    script.src = CONFIG.leafletJs;
+    script.integrity = CONFIG.leafletJsIntegrity;
+    script.crossOrigin = '';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Leaflet não carregou'));
+    document.body.appendChild(script);
+  });
+
+  return state.leafletPromise;
+}
+
 /* ---------- formatting ---------- */
 
 function priceLabel(property) {
-  if (property.priceOnRequest || typeof property.price !== 'number') return 'Sob consulta';
+  if (property.priceOnRequest || typeof property.price !== 'number') return t('onRequest');
   return euro.format(property.price);
 }
 
 function typeLabel(property) {
-  return property.listingType === 'procura' ? 'Procura' : 'Venda';
+  return property.listingType === 'procura' ? t('wanted') : t('sale');
 }
 
 function specs(property) {
@@ -115,6 +162,56 @@ function specs(property) {
   ].filter(Boolean);
 }
 
+/* ---------- chrome / motion ---------- */
+
+function bindHeaderScroll() {
+  /* handled by i18n.js chrome */
+}
+
+function observeReveals(root = document) {
+  const nodes = $$('.reveal, .project-row', root).filter((node) => !node.classList.contains('is-in'));
+  if (!nodes.length) return;
+
+  if (!('IntersectionObserver' in window)) {
+    nodes.forEach((node) => node.classList.add('is-in'));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        entry.target.classList.add('is-in');
+        observer.unobserve(entry.target);
+      }
+    },
+    { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+  );
+
+  nodes.forEach((node) => observer.observe(node));
+}
+
+function setOgImage(url) {
+  if (!url) return;
+  let meta = document.querySelector('meta[property="og:image"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('property', 'og:image');
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute('content', url);
+}
+
+function renderWhatsAppFloat() {
+  const phone = digits(contactPhone());
+  const button = $('#wa-float');
+  if (!phone || !button) return;
+
+  const message = 'Olá, gostaria de falar com a Edizur.';
+  button.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  button.hidden = false;
+}
+
 /* ---------- rendering ---------- */
 
 function applySettings(settings) {
@@ -122,12 +219,32 @@ function applySettings(settings) {
 
   for (const node of $$('[data-content]')) {
     const value = settings[node.dataset.content];
-    if (typeof value === 'string' && value.trim()) node.textContent = value.trim();
+    if (typeof value === 'string' && value.trim()) {
+      node.textContent = value.trim();
+      node.dataset.contentLocked = '1';
+    }
+  }
+
+  // When viewing English, prefer translated fallbacks for unlocked CMS fields.
+  if (window.EdizurUI?.lang === 'en') {
+    $$('[data-i18n-fallback]').forEach((node) => {
+      if (node.dataset.contentLocked === '1') return;
+      const value = t(node.dataset.i18nFallback);
+      if (value) node.textContent = value;
+    });
   }
 
   const email = settings.email || CONFIG.fallbackEmail;
   $('#footer-email').href = `mailto:${email}`;
   $('#footer-email-text').textContent = email;
+
+  const phone = settings.phone || CONFIG.fallbackPhone;
+  const phoneLink = $('#footer-phone');
+  if (phone && phoneLink) {
+    phoneLink.href = `tel:${digits(phone)}`;
+    $('#footer-phone-text').textContent = phone;
+    phoneLink.hidden = false;
+  }
 
   const addressLines = (settings.address || '')
     .split('\n')
@@ -139,12 +256,16 @@ function applySettings(settings) {
   footerAddress.hidden = !addressLines.length;
 
   renderSocial(settings);
+  renderWhatsAppFloat();
 
-  const heroUrl = imageUrl(settings.heroImage, { width: 1100, height: 1300 });
-  if (heroUrl) {
-    const hero = $('#hero-image');
+  const projectCover = state.projects[0]?.images?.[0];
+  const heroSource = settings.heroImage || projectCover;
+  const heroUrl = imageUrl(heroSource, { width: 2000, height: 1400 });
+  const hero = $('#hero-image');
+  if (heroUrl && hero) {
     hero.src = heroUrl;
-    hero.alt = settings.heroImage.alt || 'Imóveis Edizur';
+    hero.alt = heroSource?.alt || 'Edizur';
+    setOgImage(imageUrl(heroSource, { width: 1200, height: 630 }));
   }
 }
 
@@ -168,20 +289,22 @@ function renderSocial(settings) {
 function propertyCard(property) {
   const images = property.images || [];
   const coverUrl = imageUrl(images[0], { width: 760, height: 570 });
-  const status = STATUS_LABELS[property.status] || '';
+  const status = statusLabel(property.status);
   const count = images.length;
   const specList = specs(property);
+  const lqip = images[0]?.lqip;
   const slides = images
     .map((image, index) => {
       const url = imageUrl(image, { width: 760, height: 570 });
       return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || property.title)}"
         data-card-slide="${index}" ${index ? 'hidden loading="lazy"' : 'loading="lazy"'}
-        decoding="async">`;
+        decoding="async"
+        style="${index || !lqip ? '' : `background:url('${escapeHtml(lqip)}') center/cover`}">`;
     })
     .join('');
 
   return `
-    <article class="card" data-id="${escapeHtml(property._id)}" data-card-index="0">
+    <article class="card reveal" data-id="${escapeHtml(property._id)}" data-card-index="0">
       <div class="card-media${coverUrl ? '' : ' is-empty'}">
         ${slides}
         <span class="badge${property.listingType === 'procura' ? ' is-procura' : ''}">${typeLabel(property)}</span>
@@ -196,7 +319,7 @@ function propertyCard(property) {
           : ''}
       </div>
       <button class="card-body" type="button" data-open-property
-        aria-label="Ver detalhes de ${escapeHtml(property.title)}">
+        aria-label="${escapeHtml(t('seeDetails'))}: ${escapeHtml(property.title)}">
         <p class="card-meta">
           ${icon('pin')}<span>${escapeHtml(property.location || 'Porto e região')}</span>
         </p>
@@ -206,8 +329,8 @@ function propertyCard(property) {
           : ''}
         ${property.description ? `<p class="card-excerpt">${escapeHtml(property.description)}</p>` : ''}
         <span class="card-foot">
-          <span class="card-agent">${escapeHtml(property.agent?.name || 'Equipa Edizur')}</span>
-          <span class="card-cta">Ver detalhes ${icon('arrow')}</span>
+          <span class="card-agent">${escapeHtml(property.agent?.name || t('teamDefault'))}</span>
+          <span class="card-cta">${escapeHtml(t('seeDetails'))} ${icon('arrow')}</span>
         </span>
       </button>
     </article>`;
@@ -224,8 +347,15 @@ function stepCardGallery(card, step) {
   $('[data-card-count]', card).textContent = `${next + 1} / ${slides.length}`;
 }
 
-function ensureMap() {
+async function ensureMap() {
   if (state.map) return true;
+
+  try {
+    await loadLeaflet();
+  } catch {
+    return false;
+  }
+
   if (!window.L) return false;
 
   state.map = L.map('property-map', { scrollWheelZoom: false }).setView([41.1579, -8.6291], 12);
@@ -237,7 +367,7 @@ function ensureMap() {
   return true;
 }
 
-function renderMap(properties) {
+async function renderMap(properties) {
   const empty = $('#map-empty');
   const positioned = properties.filter(
     (property) =>
@@ -245,14 +375,17 @@ function renderMap(properties) {
       Number.isFinite(property.mapLocation?.lng),
   );
 
-  if (!ensureMap()) {
-    empty.textContent = 'Não foi possível carregar o mapa. Por favor tente novamente mais tarde.';
+  empty.textContent = t('mapLoading');
+  empty.hidden = false;
+
+  if (!(await ensureMap())) {
+    empty.textContent = t('mapFail');
     empty.hidden = false;
     return;
   }
 
   state.mapMarkers.clearLayers();
-  empty.textContent = 'Não existem imóveis com posição no mapa nesta categoria.';
+  empty.textContent = t('emptyMap');
   empty.hidden = positioned.length > 0;
 
   const bounds = [];
@@ -264,7 +397,7 @@ function renderMap(properties) {
       radius: 9,
       color: '#fff',
       weight: 2,
-      fillColor: '#b89765',
+      fillColor: '#9a7f52',
       fillOpacity: 1,
     });
     marker.bindTooltip(
@@ -303,7 +436,9 @@ function renderProperties() {
   }
 
   grid.innerHTML = visible.map(propertyCard).join('');
+  empty.textContent = t('emptyListings');
   empty.hidden = visible.length > 0;
+  observeReveals(grid);
 }
 
 function renderTeam() {
@@ -326,14 +461,14 @@ function renderTeam() {
         .join('');
 
       return `
-        <article class="member">
+        <article class="member reveal">
           <div class="member-photo">
             ${photo
               ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(agent.name)}" loading="lazy" decoding="async">`
               : `<span class="member-initials" aria-hidden="true">${escapeHtml(initials)}</span>`}
           </div>
           <h3>${escapeHtml(agent.name)}</h3>
-          <p class="role">${escapeHtml(agent.role || 'Consultor Imobiliário')}</p>
+          <p class="role">${escapeHtml(agent.role || t('roleDefault'))}</p>
           <div class="member-links">
             ${agent.phone ? `<a class="chip" href="tel:${escapeHtml(agent.phone.replace(/\s/g, ''))}">${icon('phone')}${escapeHtml(agent.phone)}</a>` : ''}
             ${agent.email ? `<a class="chip" href="mailto:${escapeHtml(agent.email)}">${icon('mail')}${escapeHtml(agent.email)}</a>` : ''}
@@ -341,36 +476,26 @@ function renderTeam() {
         </article>`;
     })
     .join('');
+
+  observeReveals(container);
 }
 
 function projectCard(project) {
   const images = project.images || [];
-  const coverUrl = imageUrl(images[0], { width: 760, height: 570 });
-  const count = images.length;
-  const slides = images
-    .map((image, index) => {
-      const url = imageUrl(image, { width: 760, height: 570 });
-      return `<img src="${escapeHtml(url)}" alt="${escapeHtml(image.alt || project.title)}"
-        data-card-slide="${index}" ${index ? 'hidden loading="lazy"' : 'loading="lazy"'}
-        decoding="async">`;
-    })
-    .join('');
+  const coverUrl = imageUrl(images[0], { width: 1400, height: 900 });
+  const lqip = images[0]?.lqip;
 
   return `
-    <article class="card project-card" data-project-id="${escapeHtml(project._id)}" data-card-index="0">
-      <div class="card-media${coverUrl ? '' : ' is-empty'}">
-        ${slides}
-        <span class="badge">Projeto</span>
-        ${count > 1
-          ? `<button class="card-carousel-nav prev" type="button" data-card-step="-1"
-                aria-label="Fotografia anterior">${icon('chev-l')}</button>
-             <button class="card-carousel-nav next" type="button" data-card-step="1"
-                aria-label="Fotografia seguinte">${icon('chev-r')}</button>
-             <span class="photo-count" data-card-count aria-live="polite">1 / ${count}</span>`
+    <article class="project-row" data-project-id="${escapeHtml(project._id)}">
+      <div class="project-row-media${coverUrl ? '' : ' is-empty'}">
+        ${coverUrl
+          ? `<img src="${escapeHtml(coverUrl)}" alt="${escapeHtml(images[0]?.alt || project.title)}"
+              loading="lazy" decoding="async"
+              style="${lqip ? `background:url('${escapeHtml(lqip)}') center/cover` : ''}">`
           : ''}
       </div>
-      <button class="card-body" type="button" data-open-project
-        aria-label="Ver detalhes de ${escapeHtml(project.title)}">
+      <button class="project-row-body" type="button" data-open-project
+        aria-label="${escapeHtml(t('seeProject'))}: ${escapeHtml(project.title)}">
         <p class="card-meta">
           ${icon('pin')}<span>${escapeHtml(project.location || 'Porto e região')}</span>
         </p>
@@ -378,8 +503,7 @@ function projectCard(project) {
         ${project.subtitle ? `<p class="card-subtitle">${escapeHtml(project.subtitle)}</p>` : ''}
         ${project.summary ? `<p class="card-excerpt">${escapeHtml(project.summary)}</p>` : ''}
         <span class="card-foot">
-          <span class="card-agent">Edizur</span>
-          <span class="card-cta">Ver projeto ${icon('arrow')}</span>
+          <span class="card-cta">${escapeHtml(t('seeProject'))} ${icon('arrow')}</span>
         </span>
       </button>
     </article>`;
@@ -392,8 +516,10 @@ function renderProjects() {
 
   grid.removeAttribute('aria-busy');
   grid.innerHTML = state.projects.map(projectCard).join('');
+  empty.textContent = t('emptyProjects');
   empty.hidden = state.projects.length > 0;
   grid.closest('section').hidden = false;
+  observeReveals(grid);
 }
 
 /* ---------- detail modal ---------- */
@@ -424,7 +550,7 @@ function galleryMarkup(item) {
 function detailMarkup(property) {
   const agent = property.agent;
   const email = agent?.email || state.settings?.email || CONFIG.fallbackEmail;
-  const phone = agent?.phone?.replace(/\D/g, '');
+  const phone = digits(agent?.phone || contactPhone());
   const propertyUrl = new URL(location.href);
   propertyUrl.search = '';
   propertyUrl.hash = `imovel-${property._id}`;
@@ -439,26 +565,26 @@ function detailMarkup(property) {
     `&to=${encodeURIComponent(email)}` +
     `&su=${encodeURIComponent(subject)}` +
     `&body=${encodeURIComponent(message)}`;
-  const status = STATUS_LABELS[property.status] || '';
+  const status = statusLabel(property.status);
 
   const rows = [
-    property.reference && ['Referência', property.reference],
-    property.location && ['Localização', property.location],
-    property.typology && ['Tipologia', property.typology],
-    property.area && ['Área', `${property.area} m²`],
-    property.bedrooms && ['Quartos', property.bedrooms],
-    property.bathrooms && ['Casas de banho', property.bathrooms],
-    property.energyRating && ['Certificado energético', property.energyRating],
-    status && ['Estado', status],
+    property.reference && [t('reference'), property.reference],
+    property.location && [t('location'), property.location],
+    property.typology && [t('typology'), property.typology],
+    property.area && [t('area'), `${property.area} m²`],
+    property.bedrooms && [t('bedrooms'), property.bedrooms],
+    property.bathrooms && [t('bathrooms'), property.bathrooms],
+    property.energyRating && [t('energy'), property.energyRating],
+    status && [t('status'), status],
   ].filter(Boolean);
 
   return `
     ${galleryMarkup(property)}
     <div class="modal-content">
-      <p class="eyebrow"><span class="dot"></span>${typeLabel(property)}${property.featured ? ' · Destaque' : ''}</p>
+      <p class="eyebrow"><span class="dot"></span>${typeLabel(property)}${property.featured ? ` · ${t('featured')}` : ''}</p>
       <h2 id="modal-title">${escapeHtml(property.title)}</h2>
       <p class="modal-price">
-        ${property.listingType === 'procura' && !property.priceOnRequest ? 'Orçamento até ' : ''}${escapeHtml(priceLabel(property))}
+        ${property.listingType === 'procura' && !property.priceOnRequest ? t('budgetUpTo') : ''}${escapeHtml(priceLabel(property))}
       </p>
 
       ${rows.length
@@ -480,14 +606,14 @@ function detailMarkup(property) {
           ? `<img src="${escapeHtml(imageUrl(agent.photo, { width: 140, height: 140 }))}" alt="${escapeHtml(agent.name)}">`
           : ''}
         <span class="who">
-          <strong>${escapeHtml(agent?.name || 'Equipa Edizur')}</strong>
-          <span>${escapeHtml(agent?.role || 'Consultor Imobiliário')}</span>
+          <strong>${escapeHtml(agent?.name || t('teamDefault'))}</strong>
+          <span>${escapeHtml(agent?.role || t('roleDefault'))}</span>
         </span>
         <span class="modal-actions">
           ${whatsappUrl
-            ? `<a class="btn btn-gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${icon('message')}Enviar mensagem</a>`
+            ? `<a class="btn btn-gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${icon('message')}${escapeHtml(t('sendMessage'))}</a>`
             : ''}
-          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}" target="_blank" rel="noopener">${icon('mail')}Enviar e-mail</a>
+          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}" target="_blank" rel="noopener">${icon('mail')}${escapeHtml(t('sendEmail'))}</a>
         </span>
       </div>
     </div>`;
@@ -495,11 +621,7 @@ function detailMarkup(property) {
 
 function projectDetailMarkup(project) {
   const email = state.settings?.email || CONFIG.fallbackEmail;
-  const phone = (
-    state.settings?.phone ||
-    state.agents.find((agent) => agent.phone)?.phone ||
-    ''
-  ).replace(/\D/g, '');
+  const phone = digits(contactPhone());
   const projectUrl = new URL(location.href);
   projectUrl.search = '';
   projectUrl.hash = `projeto-${project._id}`;
@@ -518,23 +640,23 @@ function projectDetailMarkup(project) {
   return `
     ${galleryMarkup(project)}
     <div class="modal-content">
-      <p class="eyebrow"><span class="dot"></span>Projeto</p>
+      <p class="eyebrow"><span class="dot"></span>${escapeHtml(t('project'))}</p>
       <h2 id="modal-title">${escapeHtml(project.title)}</h2>
       ${project.subtitle ? `<p class="modal-subtitle">${escapeHtml(project.subtitle)}</p>` : ''}
       ${project.location
-        ? `<dl class="spec-grid"><div class="spec"><dt>Localização</dt><dd>${escapeHtml(project.location)}</dd></div></dl>`
+        ? `<dl class="spec-grid"><div class="spec"><dt>${escapeHtml(t('location'))}</dt><dd>${escapeHtml(project.location)}</dd></div></dl>`
         : ''}
       ${project.description ? `<p class="modal-desc">${escapeHtml(project.description)}</p>` : ''}
       <div class="modal-agent">
         <span class="who">
           <strong>Edizur</strong>
-          <span>Construção e Imobiliária</span>
+          <span>${escapeHtml(t('brandTagline'))}</span>
         </span>
         <span class="modal-actions">
           ${whatsappUrl
-            ? `<a class="btn btn-gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${icon('message')}Enviar mensagem</a>`
+            ? `<a class="btn btn-gold" href="${escapeHtml(whatsappUrl)}" target="_blank" rel="noopener">${icon('message')}${escapeHtml(t('sendMessage'))}</a>`
             : ''}
-          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}" target="_blank" rel="noopener">${icon('mail')}Enviar e-mail</a>
+          <a class="btn btn-ghost" href="${escapeHtml(emailUrl)}" target="_blank" rel="noopener">${icon('mail')}${escapeHtml(t('sendEmail'))}</a>
         </span>
       </div>
     </div>`;
@@ -545,10 +667,27 @@ function showSlide(index) {
   if (!gallery) return;
 
   const slides = $$('[data-slide]', gallery);
+  if (!slides.length) return;
+
   const next = (index + slides.length) % slides.length;
+  const current = slides[state.gallery ?? 0];
+  const incoming = slides[next];
   state.gallery = next;
 
-  slides.forEach((slide, i) => { slide.hidden = i !== next; });
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion || !current || current === incoming) {
+    slides.forEach((slide, i) => { slide.hidden = i !== next; });
+  } else {
+    current.classList.add('is-fading');
+    window.setTimeout(() => {
+      current.hidden = true;
+      current.classList.remove('is-fading');
+      incoming.hidden = false;
+      incoming.classList.add('is-fading');
+      requestAnimationFrame(() => incoming.classList.remove('is-fading'));
+    }, 160);
+  }
+
   $$('[data-goto]', gallery).forEach((dot, i) => dot.classList.toggle('is-active', i === next));
 }
 
@@ -643,14 +782,8 @@ function bindEvents() {
   });
 
   $('#projects-grid')?.addEventListener('click', (event) => {
-    const step = event.target.closest('[data-card-step]');
-    if (step) {
-      stepCardGallery(step.closest('.card'), Number(step.dataset.cardStep));
-      return;
-    }
-
     if (!event.target.closest('[data-open-project]')) return;
-    const card = event.target.closest('.card[data-project-id]');
+    const card = event.target.closest('[data-project-id]');
     if (card) openProject(card.dataset.projectId);
   });
 
@@ -670,6 +803,13 @@ function bindEvents() {
     if (event.key === 'ArrowLeft') showSlide(state.gallery - 1);
     if (event.key === 'ArrowRight') showSlide(state.gallery + 1);
   });
+
+  window.addEventListener('edizur:lang', () => {
+    applySettings(state.settings);
+    renderProjects();
+    renderTeam();
+    renderProperties();
+  });
 }
 
 /* ---------- boot ---------- */
@@ -679,6 +819,8 @@ async function init() {
   $('#year').textContent =
     year > CONFIG.foundedYear ? `${CONFIG.foundedYear}–${year}` : String(CONFIG.foundedYear);
   bindEvents();
+  bindHeaderScroll();
+  observeReveals();
 
   try {
     const { settings, agents, properties, projects } = await loadContent();
@@ -688,9 +830,9 @@ async function init() {
     state.projects = projects || [];
 
     applySettings(state.settings);
+    renderProjects();
     renderTeam();
     renderProperties();
-    renderProjects();
 
     const propertyMatch = location.hash.match(/^#imovel-(.+)$/);
     if (propertyMatch) openProperty(propertyMatch[1], { updateHash: false });
@@ -702,7 +844,7 @@ async function init() {
     $('#grid').innerHTML = '';
     $('#grid').removeAttribute('aria-busy');
     const empty = $('#empty');
-    empty.textContent = 'Não foi possível carregar os imóveis. Por favor tente novamente mais tarde.';
+    empty.textContent = t('loadFail');
     empty.hidden = false;
   }
 }
